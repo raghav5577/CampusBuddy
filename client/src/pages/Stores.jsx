@@ -42,7 +42,7 @@ const Stores = () => {
                         items={menuItems}
                         textColor="#FFFFFF"
                         bgColor="transparent"
-                        marqueeBgColor="#FF6B6B"
+                        marqueeBgColor="linear-gradient(to right, #2563EB, #7C3AED)"
                         marqueeTextColor="#fff"
                         borderColor="rgba(255,255,255,0.2)"
                     />

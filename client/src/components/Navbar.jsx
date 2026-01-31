@@ -45,19 +45,19 @@ const Navbar = () => {
                 </Link>
 
                 {/* Center Nav Pill - Spacious */}
-                <nav className="hidden md:flex items-center gap-4 bg-[#060010]/60 backdrop-blur-xl border border-white/5 rounded-full p-2 shadow-[0_8px_32px_rgba(31,38,135,0.15)]">
+                <nav className="hidden md:flex items-center gap-2 bg-[#0d0d1a]/80 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(31,38,135,0.15)]">
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             to={link.path}
-                            className={`relative px-8 py-3 rounded-full text-base font-['Figtree'] transition-all duration-300 whitespace-nowrap ${isActive(link.path) ? 'text-white font-medium' : 'text-white/60 hover:text-white'
+                            className={`relative px-5 py-2.5 text-[15px] font-['Figtree'] transition-all duration-300 whitespace-nowrap ${isActive(link.path) ? 'text-white font-medium' : 'text-white/50 hover:text-white/80'
                                 }`}
                         >
                             {link.name}
                             {isActive(link.path) && (
                                 <motion.div
                                     layoutId="activeDot"
-                                    className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"
+                                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"
                                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 />
                             )}
@@ -80,13 +80,13 @@ const Navbar = () => {
                     {!user ? (
                         <Link to="/login">
                             <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="flex items-center justify-between gap-4 bg-[#FF6B6B] hover:bg-[#ff5252] text-white pl-6 pr-1.5 py-1.5 rounded-full font-['Figtree'] font-medium text-sm transition-all border border-white/10 min-w-[200px] shadow-lg shadow-[#FF6B6B]/20"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full p-1.5 pl-5 pr-1.5 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] border border-white/10"
                             >
-                                <span>Login</span>
-                                <span className="flex items-center justify-center bg-[#060010] w-[80px] h-[36px] rounded-full text-xs font-semibold">
-                                    <FaArrowRight className="text-white" />
+                                <span className="text-white font-['Figtree'] font-bold text-sm">Login</span>
+                                <span className="flex items-center justify-center bg-[#0b0b0b] w-10 h-8 rounded-full">
+                                    <FaArrowRight className="text-white text-xs" />
                                 </span>
                             </motion.button>
                         </Link>
@@ -94,12 +94,14 @@ const Navbar = () => {
                         <div className="relative group">
                             <Link to="/profile">
                                 <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="flex items-center justify-between gap-3 bg-[#FF6B6B] hover:bg-[#ff5252] text-white pl-6 pr-2 py-2 rounded-full font-['Figtree'] font-medium text-base transition-all border border-white/10 min-w-[220px] shadow-lg shadow-[#FF6B6B]/20"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="flex items-center gap-4 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full p-1.5 pl-6 pr-1.5 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] border border-white/10"
                                 >
-                                    <span className="truncate max-w-[150px] text-left font-semibold">{user.name.split(' ')[0]}</span>
-                                    <span className="flex items-center justify-center bg-[#000000]/20 px-5 h-[40px] rounded-full text-xs font-bold gap-2 shrink-0 tracking-wide uppercase">
+                                    <span className="text-white font-['Figtree'] font-semibold text-sm truncate max-w-[120px]">
+                                        {user.name.split(' ')[0]}
+                                    </span>
+                                    <span className="flex items-center justify-center bg-[#0b0b0b] px-4 h-9 rounded-full text-[10px] font-bold tracking-wider text-white/90 uppercase">
                                         Profile
                                     </span>
                                 </motion.button>

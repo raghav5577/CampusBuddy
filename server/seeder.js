@@ -69,10 +69,33 @@ const mainCanteenMenu = [
     { name: 'Tea', price: 10, category: 'Beverages', description: 'Masala chai', prepTime: 5 },
 ];
 
-const ccdMenu = [
-    { name: 'Cappuccino', price: 120, category: 'Coffee', description: 'Rich espresso with steamed milk foam', prepTime: 5 },
-    { name: 'Choco Frappe', price: 160, category: 'Shakes', description: 'Cold chocolate coffee', prepTime: 5 },
-    { name: 'Paneer Tikka Sandwich', price: 140, category: 'Sandwiches', description: 'Grilled paneer sandwich', prepTime: 10 },
+const snapEatsMenu = [
+    { name: 'Cold Coffee', price: 100, category: 'Coffee', description: 'Chilled coffee with ice cream', prepTime: 5 },
+    { name: 'Oreo Shake', price: 120, category: 'Shakes', description: 'Thick shake with oreo crumbs', prepTime: 5 },
+    { name: 'Chicken Sandwich', price: 90, category: 'Sandwiches', description: 'Grilled chicken with mayo', prepTime: 10 },
+    { name: 'Brownie', price: 80, category: 'Desserts', description: 'Warm walnut brownie', prepTime: 2 },
+];
+
+const subwayMenu = [
+    { name: 'Veggie Delight', price: 150, category: 'Subs', description: 'Fresh veggies with choice of sauce', prepTime: 5 },
+    { name: 'Paneer Tikka Sub', price: 180, category: 'Subs', description: 'Spicy paneer chunks in 6-inch sub', prepTime: 5 },
+    { name: 'Chicken Teriyaki', price: 200, category: 'Subs', description: 'Sweet and savory chicken strips', prepTime: 5 },
+    { name: 'Cookie', price: 40, category: 'Sides', description: 'Choco chip cookie', prepTime: 0 },
+];
+
+const dominosMenu = [
+    { name: 'Margherita', price: 199, category: 'Pizza', description: 'Classic cheese pizza', prepTime: 15 },
+    { name: 'Farmhouse', price: 259, category: 'Pizza', description: 'Onion, capsicum, tomato, mushroom', prepTime: 15 },
+    { name: 'Peppy Paneer', price: 289, category: 'Pizza', description: 'Paneer cubes with paprika', prepTime: 15 },
+    { name: 'Garlic Breadsticks', price: 99, category: 'Sides', description: 'Baked with garlic butter', prepTime: 10 },
+    { name: 'Choco Lava Cake', price: 99, category: 'Sides', description: 'Molten chocolate cake', prepTime: 10 },
+];
+
+const southernStoriesMenu = [
+    { name: 'Vanilla Scoop', price: 60, category: 'Ice Cream', description: 'Two scoops of vanilla', prepTime: 2 },
+    { name: 'Chocolate Fudge', price: 120, category: 'Ice Cream', description: 'Ice cream with hot fudge sauce', prepTime: 5 },
+    { name: 'Mango Shake', price: 100, category: 'Shakes', description: 'Seasonal mango shake', prepTime: 5 },
+    { name: 'Masala Corn', price: 50, category: 'Snacks', description: 'Steamed sweet corn with spices', prepTime: 5 },
 ];
 
 const seedDB = async () => {
@@ -83,54 +106,57 @@ const seedDB = async () => {
         // Clear existing data
         await Outlet.deleteMany();
         await MenuItem.deleteMany();
-        await User.deleteMany(); // Clear users too to avoid duplicates or role conflicts for demo
+        await User.deleteMany();
         console.log('Cleared existing data (Outlets, Menus, Users)');
 
         // Create Outlets
         const createdOutlets = await Outlet.insertMany(outlets);
         console.log(`Created ${createdOutlets.length} outlets`);
 
-        // Add Menu Items (Example for Main Canteen and CCD)
-        const canteen = createdOutlets.find(o => o.name === 'Main Canteen');
-        const ccd = createdOutlets.find(o => o.name === 'Café Coffee Day');
+        // Helper to find outlet by name
+        const findOutlet = (name) => createdOutlets.find(o => o.name === name);
+
+        // Add Menu Items
+        const canteen = findOutlet('M Block Canteen');
+        const snapEats = findOutlet('SnapEats');
+        const subway = findOutlet('Subway');
+        const dominos = findOutlet('Dominos Pizza');
+        const southernStories = findOutlet('Southern Stories');
 
         if (canteen) {
-            const canteenItems = mainCanteenMenu.map(item => ({ ...item, outletId: canteen._id }));
-            await MenuItem.insertMany(canteenItems);
-            console.log('Added Main Canteen menu');
+            await MenuItem.insertMany(mainCanteenMenu.map(item => ({ ...item, outletId: canteen._id })));
+            console.log('Added M Block Canteen menu');
 
-            // --- CREATE ADMIN USER ---
-            // Create a default admin for Main Canteen
-            // Manually hashing password because insertMany or direct create via mongoose logic in seeder usually skips pre-save hooks unless using .create() carefully or user.save()
-            // Using User.create checks pre-save hooks
+            // Create Admin for M Block Canteen
             await User.create({
                 name: "Canteen Admin",
                 email: "admin@canteen.com",
-                password: "admin", // Will be hashed by pre-save hook
+                password: "admin123",
                 phone: "9999999999",
                 role: "admin",
                 outletId: canteen._id
             });
-            console.log('Created Admin User: admin@canteen.com / admin');
+            console.log('Created Admin User');
         }
 
-        if (ccd) {
-            const ccdItems = ccdMenu.map(item => ({ ...item, outletId: ccd._id }));
-            await MenuItem.insertMany(ccdItems);
-            console.log('Added CCD menu');
+        if (snapEats) {
+            await MenuItem.insertMany(snapEatsMenu.map(item => ({ ...item, outletId: snapEats._id })));
+            console.log('Added SnapEats menu');
         }
 
-        // Add minimal items for others
-        for (const outlet of createdOutlets) {
-            if (outlet.name !== 'Main Canteen' && outlet.name !== 'Café Coffee Day') {
-                await MenuItem.create({
-                    outletId: outlet._id,
-                    name: 'Classic Item',
-                    price: 100,
-                    category: outlet.categories[0] || 'General',
-                    description: `Best seller at ${outlet.name}`
-                });
-            }
+        if (subway) {
+            await MenuItem.insertMany(subwayMenu.map(item => ({ ...item, outletId: subway._id })));
+            console.log('Added Subway menu');
+        }
+
+        if (dominos) {
+            await MenuItem.insertMany(dominosMenu.map(item => ({ ...item, outletId: dominos._id })));
+            console.log('Added Dominos menu');
+        }
+
+        if (southernStories) {
+            await MenuItem.insertMany(southernStoriesMenu.map(item => ({ ...item, outletId: southernStories._id })));
+            console.log('Added Southern Stories menu');
         }
 
         // Create a default student user

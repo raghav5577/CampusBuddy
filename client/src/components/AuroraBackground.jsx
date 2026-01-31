@@ -20,7 +20,7 @@ export const AuroraBackground = ({ className, children, showRadialGradient = tru
                             `
             [--white-gradient:repeating-linear-gradient(100deg,var(--white)_0%,var(--white)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--white)_16%)]
             [--dark-gradient:repeating-linear-gradient(100deg,var(--black)_0%,var(--black)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--black)_16%)]
-            [--aurora:repeating-linear-gradient(100deg,#844d5e_10%,#f4f6f6_15%,#4ECDC4_20%,#a38d94_25%,#844d5e_30%)]
+            [--aurora:repeating-linear-gradient(100deg,#3B82F6_10%,#8B5CF6_15%,#9333EA_20%,#4C1D95_25%,#3B82F6_30%)]
             [background-image:var(--white-gradient),var(--aurora)]
             dark:[background-image:var(--dark-gradient),var(--aurora)]
             [background-size:300%,_200%]

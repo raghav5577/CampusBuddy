@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import './FlowingMenu.css';
 
+import { Link } from 'react-router-dom';
+
 function FlowingMenu({
     items = [],
     speed = 0.5, // Increased speed for visibility
@@ -118,16 +120,16 @@ function MenuItem({ link, text, image, speed, textColor, marqueeBgColor, marquee
 
     return (
         <div className="menu__item" ref={itemRef} style={{ borderColor }}>
-            <a
+            <Link
                 className="menu__item-link"
-                href={link}
+                to={link}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 style={{ color: textColor }}
             >
                 {text}
-            </a>
-            <div className="marquee" ref={marqueeRef} style={{ backgroundColor: marqueeBgColor }}>
+            </Link>
+            <div className="marquee" ref={marqueeRef} style={{ background: marqueeBgColor }}>
                 <div className="marquee__inner-wrap">
                     <div className="marquee__inner" ref={marqueeInnerRef} aria-hidden="true">
                         {[...Array(repetitions)].map((_, idx) => (

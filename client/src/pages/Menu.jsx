@@ -7,8 +7,10 @@ import { API_URL } from '../config';
 
 const Menu = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [outlet, setOutlet] = useState(null);
-    // ...
+    const [loading, setLoading] = useState(true);
+    const { addToCart } = useContext(CartContext);
     useEffect(() => {
         const fetchOutlet = async () => {
             try {
@@ -46,7 +48,7 @@ const Menu = () => {
                 <div>
                     <h1>{outlet.name}</h1>
                     <p>{outlet.description}</p>
-                    <div style={{ marginTop: '10px', display: 'flex', gap: '20px', color: '#666' }}>
+                    <div style={{ marginTop: '10px', display: 'flex', gap: '20px', color: 'rgba(255,255,255,0.7)' }}>
                         <span>📍 {outlet.location}</span>
                         <span>⏱️ Avg Prep: {outlet.averagePrepTime} min</span>
                     </div>
@@ -55,7 +57,7 @@ const Menu = () => {
 
             {Object.entries(menuByCategory).map(([category, items]) => (
                 <div key={category} style={{ marginBottom: '40px' }}>
-                    <h2 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>{category}</h2>
+                    <h2 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '20px' }}>{category}</h2>
                     <div className="grid">
                         {items.map(item => (
                             <div key={item._id} className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
@@ -69,9 +71,9 @@ const Menu = () => {
                                         <h3 style={{ fontSize: '1.2rem' }}>{item.name}</h3>
                                         <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>₹{item.price}</span>
                                     </div>
-                                    <p style={{ fontSize: '0.9rem', color: '#777', marginBottom: '15px' }}>{item.description}</p>
+                                    <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', marginBottom: '15px' }}>{item.description}</p>
                                     <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '0.8rem', color: '#888', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                             <FaClock /> {item.prepTime || 10}m
                                         </span>
                                         <button
