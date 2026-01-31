@@ -91,7 +91,7 @@ const Navbar = () => {
                             </motion.button>
                         </Link>
                     ) : (
-                        <div className="relative group">
+                        <div className="flex items-center gap-3">
                             <Link to="/profile">
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
@@ -106,6 +106,17 @@ const Navbar = () => {
                                     </span>
                                 </motion.button>
                             </Link>
+                            {isActive('/profile') && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={handleLogout}
+                                    className="hidden md:flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2.5 rounded-full font-['Figtree'] font-medium text-sm transition-all border border-red-500/20"
+                                >
+                                    <FaSignOutAlt className="text-xs" />
+                                    Logout
+                                </motion.button>
+                            )}
                         </div>
                     )}
 
