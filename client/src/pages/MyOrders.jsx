@@ -26,14 +26,26 @@ const MyOrders = () => {
             }
         };
 
-        if (user) fetchOrders();
+        if (user) {
+            fetchOrders();
 
-        // Listen for live updates
-        socket.on('order_updated', (updatedOrder) => {
-            setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
-        });
+            // Join user-specific room for personalized updates
+            socket.emit('join_user_room', user._id);
+
+            // Listen for live updates (both event types)
+            const handleOrderUpdate = (updatedOrder) => {
+                // Only update if this order belongs to current user
+                if (updatedOrder.userId === user._id || updatedOrder.userId._id === user._id) {
+                    setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+                }
+            };
+
+            socket.on('order_status_updated', handleOrderUpdate);
+            socket.on('order_updated', handleOrderUpdate);
+        }
 
         return () => {
+            socket.off('order_status_updated');
             socket.off('order_updated');
         };
     }, [user]);
