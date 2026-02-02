@@ -125,6 +125,15 @@ const Navbar = () => {
                         </div>
                     )}
 
+                    {/* Mobile Login Button (visible when not logged in) */}
+                    {!user && (
+                        <Link to="/login" className="md:hidden">
+                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black font-medium text-xs rounded-lg hover:bg-[#eee] transition-all">
+                                Login
+                            </button>
+                        </Link>
+                    )}
+
                     {/* Mobile Menu Toggle */}
                     <button
                         className="md:hidden p-2 text-white"

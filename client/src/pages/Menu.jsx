@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import CartContext from '../context/CartContext';
+import FloatingCart from '../components/FloatingCart';
 import { FaPlus, FaClock, FaArrowLeft, FaMapMarkerAlt } from 'react-icons/fa';
 import { API_URL } from '../config';
 import { motion } from 'framer-motion';
@@ -185,8 +186,8 @@ const Menu = () => {
                                             onClick={() => addToCart(item, outlet._id)}
                                             disabled={!item.isAvailable || !outlet.isOpen}
                                             className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${!outlet.isOpen
-                                                    ? 'bg-[#222] text-[#666] cursor-not-allowed'
-                                                    : 'bg-white text-black hover:bg-[#eee]'
+                                                ? 'bg-[#222] text-[#666] cursor-not-allowed'
+                                                : 'bg-white text-black hover:bg-[#eee]'
                                                 }`}
                                         >
                                             {!outlet.isOpen ? 'Closed' : <><FaPlus className="text-[10px]" /> Add</>}
@@ -204,6 +205,9 @@ const Menu = () => {
                     </div>
                 )}
             </div>
+
+            {/* Floating Cart Widget */}
+            <FloatingCart />
         </div>
     );
 };
