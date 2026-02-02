@@ -13,21 +13,17 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    /* No alignment here, items handle it */
 }
 
 .menu__item {
     position: relative;
     cursor: pointer;
     overflow: hidden;
-    /* Adjust these to style the border lines */
-    border-top: 1px solid #ccc;
-    /* The last item needs a bottom border to match, handled typically via map or :last-child in CSS 
-       but here we can just add borderTop to all */
+    border-top: 1px solid #333;
 }
 
 .menu__item:last-child {
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #333;
 }
 
 .menu__item-link {
@@ -41,8 +37,15 @@
     padding: 1rem 2rem;
     z-index: 10;
     transition: color 0.3s;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', sans-serif;
+    color: white;
+    /* Ensure text is white by default on black bg */
     text-align: center;
+}
+
+.menu__item-link:hover {
+    color: white;
+    /* Keep white on hover as the marquee will provide background */
 }
 
 /* Marquee container */
@@ -55,7 +58,7 @@
     overflow: hidden;
     pointer-events: none;
     z-index: 5;
-    /* Hidden by default, shown on hover via GSAP */
+    /* RESTORED: This transform is essential for the GSAP animation to work */
     transform: translate3d(0, 101%, 0);
 }
 
@@ -69,7 +72,6 @@
     height: 100%;
     display: flex;
     align-items: center;
-    /* We'll animate this X position */
     white-space: nowrap;
     will-change: transform;
 }
@@ -79,7 +81,6 @@
     align-items: center;
     flex-shrink: 0;
     padding: 0 4vw;
-    /* spacing between repetitions */
 }
 
 /* Text inside marquee */
@@ -87,9 +88,10 @@
     font-size: 7vw;
     font-weight: 600;
     text-transform: uppercase;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', sans-serif;
     line-height: 0.8;
     margin-right: 2rem;
+    color: white;
 }
 
 /* Image inside marquee */

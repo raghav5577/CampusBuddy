@@ -18,38 +18,44 @@ import Stores from './pages/Stores';
 import Contact from './pages/Contact';
 import UserProfile from './pages/UserProfile';
 import ProtectedRoute from './components/ProtectedRoute';
-import AuroraBackground from './components/AuroraBackground';
 
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <AuroraBackground>
-          <div style={{ position: 'relative', zIndex: 10, width: '100%', height: '100vh', overflowY: 'auto', paddingTop: '80px' }}>
-            <Router>
-              <Navbar />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+        <div className="min-h-screen bg-black">
+          <Router>
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-                <Route path="/outlet/:id" element={<Menu />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/stores" element={<Stores />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+              <Route path="/outlet/:id" element={<Menu />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/stores" element={<Stores />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
 
-                <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-              </Routes>
-              <Footer />
-              <ToastContainer position="bottom-right" />
-            </Router>
-          </div>
-        </AuroraBackground>
+              <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+            </Routes>
+            <Footer />
+            <ToastContainer
+              position="bottom-right"
+              theme="dark"
+              toastStyle={{
+                backgroundColor: '#111',
+                color: '#fff',
+                border: '1px solid #222',
+                borderRadius: '8px',
+              }}
+            />
+          </Router>
+        </div>
       </CartProvider>
-    </AuthProvider >
+    </AuthProvider>
   );
 }
 

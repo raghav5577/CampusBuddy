@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs'); // Need bcrypt to hash admin password
+const bcrypt = require('bcryptjs');
 const Outlet = require('./models/Outlet');
 const MenuItem = require('./models/MenuItem');
-const User = require('./models/User'); // Import User model
+const User = require('./models/User');
 
 dotenv.config();
 
@@ -18,7 +18,6 @@ const outlets = [
         image: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1351&q=80',
         categories: ['Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Beverages']
     },
-    // ... (rest of outlets same)
     {
         name: 'SnapEats',
         description: 'Brewing happiness. Coffee, shakes, and light bites.',
@@ -40,14 +39,24 @@ const outlets = [
         categories: ['Subs', 'Salads', 'Sides']
     },
     {
-        name: 'Dominos Pizza',
-        description: 'Dil, Dosti, Dominos. Pizzas and sides.',
+        name: 'Bistro 24/7',
+        description: 'Late night cravings? We got you. Burgers, fries, and coffee.',
+        location: 'Student Center',
+        openingTime: '00:00 AM',
+        closingTime: '23:59 PM',
+        averagePrepTime: 12,
+        image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80', // Reusing coffee/cafe image style
+        categories: ['Burgers', 'All Day Breakfast', 'Coffee', 'Shakes']
+    },
+    {
+        name: 'House of Chow',
+        description: 'Authentic Asian flavors. Noodles, dimsums, and more.',
         location: 'Food Court',
         openingTime: '11:00 AM',
-        closingTime: '02:00 AM',
+        closingTime: '10:00 PM',
         averagePrepTime: 15,
-        image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        categories: ['Pizza', 'Sides', 'Beverages']
+        image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+        categories: ['Noodles', 'Rice', 'Dimsums', 'Appetizers']
     },
     {
         name: 'Southern Stories',
@@ -83,12 +92,20 @@ const subwayMenu = [
     { name: 'Cookie', price: 40, category: 'Sides', description: 'Choco chip cookie', prepTime: 0 },
 ];
 
-const dominosMenu = [
-    { name: 'Margherita', price: 199, category: 'Pizza', description: 'Classic cheese pizza', prepTime: 15 },
-    { name: 'Farmhouse', price: 259, category: 'Pizza', description: 'Onion, capsicum, tomato, mushroom', prepTime: 15 },
-    { name: 'Peppy Paneer', price: 289, category: 'Pizza', description: 'Paneer cubes with paprika', prepTime: 15 },
-    { name: 'Garlic Breadsticks', price: 99, category: 'Sides', description: 'Baked with garlic butter', prepTime: 10 },
-    { name: 'Choco Lava Cake', price: 99, category: 'Sides', description: 'Molten chocolate cake', prepTime: 10 },
+const houseOfChowMenu = [
+    { name: 'Hakka Noodles', price: 150, category: 'Noodles', description: 'Classic stir-fried noodles', prepTime: 10 },
+    { name: 'Chilli Chicken', price: 220, category: 'Appetizers', description: 'Spicy wok-tossed chicken', prepTime: 15 },
+    { name: 'Veg Fried Rice', price: 160, category: 'Rice', description: 'Aromatic basmati rice with veggies', prepTime: 12 },
+    { name: 'Chicken Dimsums', price: 180, category: 'Dimsums', description: 'Steamed dumplings (6 pcs)', prepTime: 15 },
+    { name: 'Spring Rolls', price: 120, category: 'Appetizers', description: 'Crispy rolls with sweet chili sauce', prepTime: 10 },
+];
+
+const bistro247Menu = [
+    { name: 'Classic Cheese Burger', price: 180, category: 'Burgers', description: 'Juicy patty with cheddar', prepTime: 12 },
+    { name: 'Loaded Fries', price: 140, category: 'Burgers', description: 'Fries topped with cheese and jalapeños', prepTime: 8 },
+    { name: 'English Breakfast', price: 250, category: 'All Day Breakfast', description: 'Eggs, toast, sausages, beans', prepTime: 15 },
+    { name: 'Cappuccino', price: 110, category: 'Coffee', description: 'Freshly brewed', prepTime: 5 },
+    { name: 'Pancakes', price: 160, category: 'All Day Breakfast', description: 'Fluffy pancakes with maple syrup', prepTime: 10 },
 ];
 
 const southernStoriesMenu = [
@@ -100,63 +117,76 @@ const southernStoriesMenu = [
 
 const seedDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus-buddy');
         console.log('MongoDB Connected...');
 
         // Clear existing data
         await Outlet.deleteMany();
         await MenuItem.deleteMany();
         await User.deleteMany();
-        console.log('Cleared existing data (Outlets, Menus, Users)');
+
+        try {
+            const OrderModel = require('./models/Order');
+            await OrderModel.deleteMany();
+            console.log('Cleared existing data (Outlets, Menus, Users, Orders)');
+        } catch (e) {
+            console.log('Cleared existing data (Outlets, Menus, Users) - Orders skipped');
+        }
 
         // Create Outlets
         const createdOutlets = await Outlet.insertMany(outlets);
         console.log(`Created ${createdOutlets.length} outlets`);
 
-        // Helper to find outlet by name
         const findOutlet = (name) => createdOutlets.find(o => o.name === name);
 
-        // Add Menu Items
-        const canteen = findOutlet('M Block Canteen');
-        const snapEats = findOutlet('SnapEats');
-        const subway = findOutlet('Subway');
-        const dominos = findOutlet('Dominos Pizza');
-        const southernStories = findOutlet('Southern Stories');
-
-        if (canteen) {
-            await MenuItem.insertMany(mainCanteenMenu.map(item => ({ ...item, outletId: canteen._id })));
-            console.log('Added M Block Canteen menu');
-
-            // Create Admin for M Block Canteen
+        // Helper to Create Admin
+        const createAdmin = async (outlet, name, email) => {
             await User.create({
-                name: "Canteen Admin",
-                email: "admin@canteen.com",
-                password: "admin123",
+                name: name,
+                email: email,
+                password: "admin123", // Met min length 6
                 phone: "9999999999",
                 role: "admin",
-                outletId: canteen._id
+                outletId: outlet._id
             });
-            console.log('Created Admin User');
+            console.log(`Created Admin: ${email} for ${outlet.name}`);
+        };
+
+        // Add Menu Items & Admins
+        const canteen = findOutlet('M Block Canteen');
+        if (canteen) {
+            await MenuItem.insertMany(mainCanteenMenu.map(item => ({ ...item, outletId: canteen._id })));
+            await createAdmin(canteen, "Canteen Admin", "admin@canteen.com");
         }
 
+        const snapEats = findOutlet('SnapEats');
         if (snapEats) {
             await MenuItem.insertMany(snapEatsMenu.map(item => ({ ...item, outletId: snapEats._id })));
-            console.log('Added SnapEats menu');
+            await createAdmin(snapEats, "SnapEats Admin", "admin@snapeats.com");
         }
 
+        const subway = findOutlet('Subway');
         if (subway) {
             await MenuItem.insertMany(subwayMenu.map(item => ({ ...item, outletId: subway._id })));
-            console.log('Added Subway menu');
+            await createAdmin(subway, "Subway Admin", "admin@subway.com");
         }
 
-        if (dominos) {
-            await MenuItem.insertMany(dominosMenu.map(item => ({ ...item, outletId: dominos._id })));
-            console.log('Added Dominos menu');
+        const houseOfChow = findOutlet('House of Chow');
+        if (houseOfChow) {
+            await MenuItem.insertMany(houseOfChowMenu.map(item => ({ ...item, outletId: houseOfChow._id })));
+            await createAdmin(houseOfChow, "House of Chow Admin", "admin@chow.com");
         }
 
+        const bistro = findOutlet('Bistro 24/7');
+        if (bistro) {
+            await MenuItem.insertMany(bistro247Menu.map(item => ({ ...item, outletId: bistro._id })));
+            await createAdmin(bistro, "Bistro Admin", "admin@bistro.com");
+        }
+
+        const southernStories = findOutlet('Southern Stories');
         if (southernStories) {
             await MenuItem.insertMany(southernStoriesMenu.map(item => ({ ...item, outletId: southernStories._id })));
-            console.log('Added Southern Stories menu');
+            await createAdmin(southernStories, "Southern Stories Admin", "admin@southern.com");
         }
 
         // Create a default student user
@@ -168,6 +198,17 @@ const seedDB = async () => {
             role: "student"
         });
         console.log('Created Student User: student@test.com / student');
+
+        // Create a Super Admin (No outlet ID)
+        await User.create({
+            name: "Super Admin",
+            email: "super@admin.com",
+            password: "admin123",
+            phone: "1111111111",
+            role: "admin",
+            // No outletId
+        });
+        console.log('Created Super Admin: super@admin.com / admin');
 
         console.log('Data Imported!');
         process.exit();

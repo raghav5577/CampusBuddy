@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Outlet = require('../models/Outlet');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -11,12 +12,36 @@ const createOrder = async (req, res) => {
             return res.status(400).json({ message: 'No items ordered' });
         }
 
+        // Check if outlet is open
+        const outlet = await Outlet.findById(outletId);
+        if (!outlet) {
+            return res.status(404).json({ message: 'Outlet not found' });
+        }
+        if (!outlet.isOpen) {
+            return res.status(400).json({ message: 'This outlet is currently closed and not accepting orders.' });
+        }
+
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        // Count orders for this outlet today
+        const orderCount = await Order.countDocuments({
+            outletId,
+            createdAt: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        // Sequential Number: 1, 2, 3...
+        const nextOrderNumber = orderCount + 1;
+
         const order = new Order({
             userId: req.user._id,
             outletId,
             items,
             totalAmount,
-            kotNumber: Math.floor(1000 + Math.random() * 9000).toString(), // Simple random KOT
+            kotNumber: nextOrderNumber.toString(),
             estimatedPickupTime: new Date(Date.now() + 15 * 60000) // +15 mins default
         });
 

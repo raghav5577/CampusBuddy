@@ -6,7 +6,8 @@ const MenuItem = require('../models/MenuItem');
 // @access  Public
 const getOutlets = async (req, res) => {
     try {
-        const outlets = await Outlet.find({ isOpen: true });
+        const query = req.query.all === 'true' ? {} : { isOpen: true };
+        const outlets = await Outlet.find(query);
         res.json(outlets);
     } catch (error) {
         console.error(error);
@@ -70,9 +71,31 @@ const addMenuItem = async (req, res) => {
     }
 };
 
+// @desc    Toggle outlet status (Open/Close)
+// @route   PATCH /api/outlets/:id/toggle-status
+// @access  Private/Admin
+const toggleOutletStatus = async (req, res) => {
+    try {
+        const outlet = await Outlet.findById(req.params.id);
+
+        if (!outlet) {
+            return res.status(404).json({ message: 'Outlet not found' });
+        }
+
+        outlet.isOpen = !outlet.isOpen;
+        await outlet.save();
+
+        res.json(outlet);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     getOutlets,
     getOutletById,
     createOutlet,
-    addMenuItem
+    addMenuItem,
+    toggleOutletStatus
 };

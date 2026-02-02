@@ -1,8 +1,8 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import AuthContext from '../context/AuthContext';
 import CartContext from '../context/CartContext';
-import { FaShoppingCart, FaSignOutAlt, FaBars, FaTimes, FaUser, FaArrowRight, FaStore } from 'react-icons/fa';
+import { FaShoppingCart, FaSignOutAlt, FaBars, FaTimes, FaArrowRight } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
@@ -11,6 +11,15 @@ const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -22,56 +31,58 @@ const Navbar = () => {
         { name: 'Home', path: '/' },
         { name: 'About', path: '/about' },
         { name: 'Stores', path: '/stores' },
-        { name: 'Contact Us', path: '/contact' },
+        { name: 'Contact', path: '/contact' },
     ];
 
     const isActive = (path) => location.pathname === path;
 
     return (
-        <header className="fixed top-4 left-0 w-full z-50 flex justify-center px-8 pointer-events-none">
-            <div className="w-full max-w-7xl flex justify-between items-center pointer-events-auto transition-all duration-300">
+        <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-[#222]' : 'bg-transparent'}`}>
+            <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-                {/* Logo Section */}
+                {/* Logo */}
                 <Link to="/" className="flex items-center gap-3 group">
                     <motion.div
-                        whileHover={{ rotate: 10, scale: 1.1 }}
-                        className="text-2xl"
+                        whileHover={{ scale: 1.1 }}
+                        className="text-xl"
                     >
                         🍔
                     </motion.div>
-                    <span className="text-white font-['Figtree'] font-medium text-xl tracking-tight group-hover:text-[#FF6B6B] transition-colors">
+                    <span className="text-white font-semibold text-lg tracking-tight">
                         CampusBuddy
                     </span>
                 </Link>
 
-                {/* Center Nav Pill - Spacious */}
-                <nav className="hidden md:flex items-center gap-2 bg-[#0d0d1a]/80 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(31,38,135,0.15)]">
+                {/* Center Navigation */}
+                <nav className="hidden md:flex items-center gap-1">
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             to={link.path}
-                            className={`relative px-5 py-2.5 text-[15px] font-['Figtree'] transition-all duration-300 whitespace-nowrap ${isActive(link.path) ? 'text-white font-medium' : 'text-white/50 hover:text-white/80'
+                            className={`relative px-4 py-2 text-sm font-medium transition-colors ${isActive(link.path)
+                                ? 'text-white'
+                                : 'text-[#888] hover:text-white'
                                 }`}
                         >
                             {link.name}
                             {isActive(link.path) && (
                                 <motion.div
-                                    layoutId="activeDot"
-                                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"
-                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    layoutId="navbar-indicator"
+                                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-full"
+                                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
                                 />
                             )}
                         </Link>
                     ))}
                 </nav>
 
-                {/* Right Action Button - Profile Section */}
-                <div className="flex items-center gap-8">
-                    {/* Cart Icon */}
-                    <Link to="/cart" className="relative hidden md:block text-white/80 hover:text-white transition-colors">
-                        <FaShoppingCart className="text-2xl" />
+                {/* Right Section */}
+                <div className="flex items-center gap-4">
+                    {/* Cart */}
+                    <Link to="/cart" className="relative hidden md:flex p-2 text-[#888] hover:text-white transition-colors">
+                        <FaShoppingCart className="text-lg" />
                         {cart.length > 0 && (
-                            <span className="absolute -top-2 -right-2 bg-[#FF6B6B] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-lg border-2 border-[#1a1a1a]">
+                            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#0070f3] text-white text-[10px] font-bold flex items-center justify-center rounded-full">
                                 {cart.length}
                             </span>
                         )}
@@ -79,53 +90,47 @@ const Navbar = () => {
 
                     {!user ? (
                         <Link to="/login">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full p-1.5 pl-5 pr-1.5 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] border border-white/10"
-                            >
-                                <span className="text-white font-['Figtree'] font-bold text-sm">Login</span>
-                                <span className="flex items-center justify-center bg-[#0b0b0b] w-10 h-8 rounded-full">
-                                    <FaArrowRight className="text-white text-xs" />
-                                </span>
-                            </motion.button>
+                            <button className="hidden md:flex items-center gap-2 px-5 py-2 bg-white text-black font-medium text-sm rounded-lg hover:bg-[#eee] transition-all">
+                                Login
+                                <FaArrowRight className="text-xs" />
+                            </button>
                         </Link>
                     ) : (
-                        <div className="flex items-center gap-3">
+                        <div className="hidden md:flex items-center gap-3">
+                            {user.role === 'admin' && (
+                                <Link to="/admin" className="text-sm font-medium text-[#e00] hover:text-[#ff4d4d] transition-colors bg-[#e00]/10 px-3 py-1.5 rounded-lg border border-[#e00]/20">
+                                    Kitchen Dashboard
+                                </Link>
+                            )}
+                            <Link to="/orders" className="text-sm text-[#888] hover:text-white transition-colors">
+                                Orders
+                            </Link>
                             <Link to="/profile">
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="flex items-center gap-4 bg-gradient-to-r from-blue-600 to-violet-600 rounded-full p-1.5 pl-6 pr-1.5 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] border border-white/10"
-                                >
-                                    <span className="text-white font-['Figtree'] font-semibold text-sm truncate max-w-[120px]">
-                                        {user.name.split(' ')[0]}
-                                    </span>
-                                    <span className="flex items-center justify-center bg-[#0b0b0b] px-4 h-9 rounded-full text-[10px] font-bold tracking-wider text-white/90 uppercase">
-                                        Profile
-                                    </span>
-                                </motion.button>
+                                <button className="flex items-center gap-2 px-4 py-2 bg-[#111] text-white font-medium text-sm rounded-lg border border-[#333] hover:border-[#555] transition-all">
+                                    <div className="w-6 h-6 bg-gradient-to-br from-[#0070f3] to-[#00a3ff] rounded-full flex items-center justify-center text-[10px] font-bold">
+                                        {user.name.charAt(0)}
+                                    </div>
+                                    {user.name.split(' ')[0]}
+                                </button>
                             </Link>
                             {isActive('/profile') && (
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                <button
                                     onClick={handleLogout}
-                                    className="hidden md:flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2.5 rounded-full font-['Figtree'] font-medium text-sm transition-all border border-red-500/20"
+                                    className="flex items-center gap-2 px-4 py-2 text-[#e00] hover:bg-[#e00]/10 font-medium text-sm rounded-lg transition-all"
                                 >
                                     <FaSignOutAlt className="text-xs" />
                                     Logout
-                                </motion.button>
+                                </button>
                             )}
                         </div>
                     )}
 
                     {/* Mobile Menu Toggle */}
                     <button
-                        className="md:hidden text-white p-2"
+                        className="md:hidden p-2 text-white"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
-                        {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+                        {isMobileMenuOpen ? <FaTimes className="text-lg" /> : <FaBars className="text-lg" />}
                     </button>
                 </div>
             </div>
@@ -134,44 +139,72 @@ const Navbar = () => {
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
+                        initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="absolute top-24 left-4 right-4 bg-[#060010]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col gap-2 md:hidden pointer-events-auto shadow-2xl z-50"
+                        exit={{ opacity: 0, y: -10 }}
+                        className="md:hidden absolute top-16 left-0 right-0 bg-black border-b border-[#222] p-4"
                     >
-                        {navLinks.map(link => (
+                        <div className="flex flex-col gap-1">
+                            {navLinks.map(link => (
+                                <Link
+                                    key={link.name}
+                                    to={link.path}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className={`p-3 rounded-lg text-sm font-medium transition-colors ${isActive(link.path)
+                                        ? 'bg-[#111] text-white'
+                                        : 'text-[#888] hover:text-white hover:bg-[#111]'
+                                        }`}
+                                >
+                                    {link.name}
+                                </Link>
+                            ))}
+
+                            <div className="h-px bg-[#222] my-2" />
+
                             <Link
-                                key={link.name}
-                                to={link.path}
+                                to="/cart"
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className={`p-3 rounded-xl text-center font-['Figtree'] ${isActive(link.path) ? 'bg-white/10 text-white' : 'text-white/60'}`}
+                                className="p-3 rounded-lg text-sm font-medium text-[#888] hover:text-white hover:bg-[#111] flex items-center justify-between"
                             >
-                                {link.name}
+                                Cart
+                                {cart.length > 0 && (
+                                    <span className="px-2 py-0.5 bg-[#0070f3] text-white text-xs rounded-full">{cart.length}</span>
+                                )}
                             </Link>
-                        ))}
-                        <Link
-                            to="/profile"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="p-3 rounded-xl text-center font-['Figtree'] text-white/60"
-                        >
-                            Profile
-                        </Link>
-                        <Link
-                            to="/cart"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="p-3 rounded-xl text-center font-['Figtree'] flex justify-center items-center gap-2 text-white/60"
-                        >
-                            Cart ({cart.length})
-                        </Link>
-                        {user ? (
-                            <button onClick={handleLogout} className="p-3 bg-[#FF4757]/20 text-[#FF4757] rounded-xl text-center font-medium mt-2">
-                                Logout
-                            </button>
-                        ) : (
-                            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="p-3 bg-[#5227FF] rounded-xl text-center text-white mt-2">
-                                Login / Sign Up
-                            </Link>
-                        )}
+
+                            {user ? (
+                                <>
+                                    <Link
+                                        to="/orders"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="p-3 rounded-lg text-sm font-medium text-[#888] hover:text-white hover:bg-[#111]"
+                                    >
+                                        My Orders
+                                    </Link>
+                                    <Link
+                                        to="/profile"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="p-3 rounded-lg text-sm font-medium text-[#888] hover:text-white hover:bg-[#111]"
+                                    >
+                                        Profile
+                                    </Link>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="p-3 rounded-lg text-sm font-medium text-[#e00] hover:bg-[#e00]/10 text-left"
+                                    >
+                                        Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="p-3 rounded-lg text-sm font-medium bg-white text-black text-center mt-2"
+                                >
+                                    Login / Sign Up
+                                </Link>
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -3,9 +3,12 @@ import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 import socket from '../socket';
 import { API_URL } from '../config';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaReceipt, FaCheck, FaFire, FaBell, FaMotorcycle, FaCheckCircle, FaClock } from 'react-icons/fa';
 
 const MyOrders = () => {
     const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
     const { user } = useContext(AuthContext);
 
     useEffect(() => {
@@ -14,9 +17,12 @@ const MyOrders = () => {
                 const token = JSON.parse(localStorage.getItem('userInfo')).token;
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 const { data } = await axios.get(`${API_URL}/orders/my`, config);
-                setOrders(data);
+                // Sort by newest first
+                setOrders(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
             } catch (error) {
                 console.error(error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -24,9 +30,7 @@ const MyOrders = () => {
 
         // Listen for live updates
         socket.on('order_updated', (updatedOrder) => {
-            // To keep it simple, we just update if the ID matches one in our list
             setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
-            // Or better: refetch or just replace
         });
 
         return () => {
@@ -34,53 +38,163 @@ const MyOrders = () => {
         };
     }, [user]);
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'pending': return 'orange';
-            case 'accepted': return 'blue';
-            case 'preparing': return 'purple';
-            case 'ready': return 'green';
-            case 'picked-up': return 'gray';
-            default: return 'black';
-        }
+    // Pizza Tracker Steps
+    const steps = [
+        { status: 'pending', label: 'Order Placed', icon: FaReceipt },
+        { status: 'accepted', label: 'Accepted', icon: FaCheck },
+        { status: 'preparing', label: 'Cooking', icon: FaFire },
+        { status: 'ready', label: 'Ready', icon: FaBell },
+        { status: 'picked-up', label: 'Picked Up', icon: FaCheckCircle },
+    ];
+
+    const getCurrentStepIndex = (status) => {
+        return steps.findIndex(s => s.status === status);
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-10 h-10 border-2 border-[#333] border-t-white rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-[#666]">Loading orders...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="container" style={{ marginTop: '40px' }}>
-            <h1 className="section-title">My Orders</h1>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {orders.map(order => (
-                    <div key={order._id} className="card" style={{ padding: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                            <div>
-                                <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>#{order.kotNumber}</span>
-                                <span style={{ marginLeft: '15px', color: '#888', fontSize: '0.9rem' }}>{new Date(order.createdAt).toLocaleString()}</span>
-                            </div>
-                            <span style={{
-                                fontWeight: 'bold',
-                                color: getStatusColor(order.status),
-                                textTransform: 'uppercase'
-                            }}>
-                                {order.status}
-                            </span>
-                        </div>
-
-                        <div>
-                            {order.items.map((item, idx) => (
-                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                    <span>{item.quantity}x {item.name}</span>
-                                    <span>₹{item.price * item.quantity}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div style={{ marginTop: '15px', paddingTop: '10px', borderTop: '1px dashed #ddd', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Total</span>
-                            <span style={{ fontWeight: 'bold' }}>₹{order.totalAmount}</span>
-                        </div>
+        <div className="min-h-screen bg-black pt-24 pb-20">
+            <div className="max-w-3xl mx-auto px-6">
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 flex items-end justify-between"
+                >
+                    <div>
+                        <h1 className="text-3xl font-bold text-white mb-2">My Orders</h1>
+                        <p className="text-[#666]">Live Order Tracking</p>
                     </div>
-                ))}
+                    {orders.length > 0 && (
+                        <div className="text-right hidden md:block">
+                            <p className="text-[#0070f3] font-semibold">{orders.length} Orders</p>
+                        </div>
+                    )}
+                </motion.div>
+
+                {orders.length === 0 ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center py-20 border border-[#222] rounded-xl bg-[#0a0a0a]"
+                    >
+                        <div className="w-16 h-16 bg-[#111] border border-[#222] rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FaReceipt className="text-2xl text-[#555]" />
+                        </div>
+                        <h3 className="text-lg font-medium text-white mb-2">No orders right now</h3>
+                        <p className="text-[#666]">Hungry? Place your first order!</p>
+                    </motion.div>
+                ) : (
+                    <div className="space-y-6">
+                        {orders.map((order, index) => {
+                            const currentStep = getCurrentStepIndex(order.status);
+                            const isCompleted = order.status === 'picked-up';
+
+                            return (
+                                <motion.div
+                                    key={order._id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className={`p-6 rounded-xl border transition-all ${isCompleted ? 'border-[#222] bg-[#0a0a0a] opacity-75 grayscale-[0.5]' : 'border-[#333] bg-[#0a0a0a] shadow-[0_0_30px_rgba(0,112,243,0.05)]'}`}
+                                >
+                                    {/* Order Header */}
+                                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-[#111] border border-[#333] flex items-center justify-center">
+                                                <span className="font-bold text-white">#{order.kotNumber}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-white font-medium">Order #{order.kotNumber}</p>
+                                                <p className="text-[#555] text-xs flex items-center gap-1">
+                                                    <FaClock className="text-[10px]" />
+                                                    {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    <span className="mx-1">•</span>
+                                                    {new Date(order.createdAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-lg font-bold text-white">₹{order.totalAmount}</p>
+                                            <p className="text-[#555] text-xs">Total Paid</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Tracker (Pizza Tracker Style) */}
+                                    <div className="relative mb-8 px-2">
+                                        {/* Progress Bar Background */}
+                                        <div className="absolute top-1/2 left-0 w-full h-1 bg-[#222] -translate-y-1/2 rounded-full z-0" />
+
+                                        {/* Active Progress Bar */}
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+                                            className="absolute top-1/2 left-0 h-1 bg-[#0070f3] -translate-y-1/2 rounded-full z-0 transition-all duration-1000 ease-out"
+                                        />
+
+                                        {/* Steps */}
+                                        <div className="relative z-10 flex justify-between">
+                                            {steps.map((step, i) => {
+                                                const isActive = i <= currentStep;
+                                                const isCurrent = i === currentStep;
+
+                                                return (
+                                                    <div key={step.status} className="flex flex-col items-center">
+                                                        <motion.div
+                                                            initial={false}
+                                                            animate={{
+                                                                scale: isCurrent ? 1.2 : 1,
+                                                                backgroundColor: isActive ? (isCompleted ? '#333' : '#0070f3') : '#111',
+                                                                borderColor: isActive ? (isCompleted ? '#333' : '#0070f3') : '#333'
+                                                            }}
+                                                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mb-2 transition-colors duration-500`}
+                                                        >
+                                                            <step.icon className={`text-[10px] ${isActive ? 'text-white' : 'text-[#666]'}`} />
+                                                        </motion.div>
+                                                        <span className={`text-[10px] font-medium transition-colors duration-300 ${isActive ? 'text-white' : 'text-[#444]'}`}>
+                                                            {step.label}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Items List (Collapsible-ish) */}
+                                    <div className="bg-[#111] rounded-lg p-4 border border-[#222]">
+                                        {order.items.map((item, idx) => (
+                                            <div key={idx} className="flex justify-between text-sm py-1 border-b border-[#222] last:border-0 last:pb-0 first:pt-0">
+                                                <span className="text-[#888]">
+                                                    <span className="text-white font-medium mr-2">{item.quantity}×</span>
+                                                    {item.name}
+                                                </span>
+                                                <span className="text-[#555]">₹{item.price * item.quantity}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {!isCompleted && (
+                                        <div className="mt-4 text-center">
+                                            <p className="text-[#0070f3] text-xs animate-pulse">
+                                                Live updates enabled • Auto-refreshing status
+                                            </p>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );
