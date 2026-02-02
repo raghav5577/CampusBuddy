@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { AnimatePresence } from 'framer-motion';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext';
@@ -18,6 +19,31 @@ import Stores from './pages/Stores';
 import Contact from './pages/Contact';
 import UserProfile from './pages/UserProfile';
 import ProtectedRoute from './components/ProtectedRoute';
+import PageTransition from './components/PageTransition';
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+
+        <Route path="/outlet/:id" element={<PageTransition><Menu /></PageTransition>} />
+        <Route path="/cart" element={<PageTransition><Cart /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+        <Route path="/stores" element={<PageTransition><Stores /></PageTransition>} />
+        <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
+        <Route path="/profile" element={<PageTransition><ProtectedRoute><UserProfile /></ProtectedRoute></PageTransition>} />
+
+        <Route path="/orders" element={<PageTransition><ProtectedRoute><MyOrders /></ProtectedRoute></PageTransition>} />
+        <Route path="/admin" element={<PageTransition><ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 function App() {
   return (
@@ -26,21 +52,7 @@ function App() {
         <div className="min-h-screen bg-black">
           <Router>
             <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-
-              <Route path="/outlet/:id" element={<Menu />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/stores" element={<Stores />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-
-              <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-            </Routes>
+            <AnimatedRoutes />
             <Footer />
             <ToastContainer
               position="bottom-right"

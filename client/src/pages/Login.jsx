@@ -133,19 +133,6 @@ const Login = () => {
                             </Link>
                         </p>
                     </div>
-
-                    {/* Demo Accounts */}
-                    <div className="mt-6 p-4 bg-[#0a0a0a] border border-[#222] rounded-lg">
-                        <p className="text-[#666] text-xs mb-2">Demo Accounts:</p>
-                        <div className="space-y-1 text-xs">
-                            <p className="text-[#888]">
-                                <span className="text-[#50e3c2]">Student:</span> student@test.com / student
-                            </p>
-                            <p className="text-[#888]">
-                                <span className="text-[#0070f3]">Admin:</span> admin@canteen.com / admin123
-                            </p>
-                        </div>
-                    </div>
                 </motion.div>
             </div>
 
