@@ -100,13 +100,19 @@ const updateOrderStatus = async (req, res) => {
         order.status = status;
         const updatedOrder = await order.save();
 
+        console.log('🔔 [Server] Order status updated:', updatedOrder._id, '→', status);
+        console.log('🔔 [Server] User ID:', updatedOrder.userId);
+        console.log('🔔 [Server] Outlet ID:', order.outletId);
+
         // Socket.io: Notify user
         const io = req.app.get('io');
-        io.to(updatedOrder.userId.toString()).emit('order_status_updated', updatedOrder); // Need client to join user room maybe? or broadcast to general if simplified
-        // Simpler: Client polls or listens on outlet room? No, better privacy.
-        // For now, let's assume we implement user rooms in socket.js later or client filters events.
 
-        // Actually simplest for now: Broadcast to everyone or outlet room and let client filter
+        // Emit to user room
+        console.log('📡 [Server] Emitting "order_status_updated" to user:', updatedOrder.userId.toString());
+        io.to(updatedOrder.userId.toString()).emit('order_status_updated', updatedOrder);
+
+        // Emit to outlet room (for admin dashboard)
+        console.log('📡 [Server] Emitting "order_updated" to outlet:', order.outletId.toString());
         io.to(order.outletId.toString()).emit('order_updated', updatedOrder);
 
         res.json(updatedOrder);

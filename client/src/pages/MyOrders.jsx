@@ -30,21 +30,42 @@ const MyOrders = () => {
             fetchOrders();
 
             // Join user-specific room for personalized updates
+            console.log('🔌 [MyOrders] Joining user room:', user._id);
+            console.log('🔌 [MyOrders] Socket connected:', socket.connected);
             socket.emit('join_user_room', user._id);
 
             // Listen for live updates (both event types)
             const handleOrderUpdate = (updatedOrder) => {
+                console.log('🔔 [MyOrders] Order update received:', updatedOrder);
+                console.log('🔔 [MyOrders] Updated order ID:', updatedOrder._id);
+                console.log('🔔 [MyOrders] New status:', updatedOrder.status);
+
                 // Only update if this order belongs to current user
-                if (updatedOrder.userId === user._id || updatedOrder.userId._id === user._id) {
+                const orderUserId = updatedOrder.userId?._id || updatedOrder.userId;
+                console.log('🔔 [MyOrders] Order user ID:', orderUserId);
+                console.log('🔔 [MyOrders] Current user ID:', user._id);
+
+                if (orderUserId === user._id) {
+                    console.log('✅ [MyOrders] Updating order in state');
                     setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+                } else {
+                    console.log('❌ [MyOrders] Ignoring - different user');
                 }
             };
 
-            socket.on('order_status_updated', handleOrderUpdate);
-            socket.on('order_updated', handleOrderUpdate);
+            socket.on('order_status_updated', (order) => {
+                console.log('📡 [MyOrders] "order_status_updated" event');
+                handleOrderUpdate(order);
+            });
+
+            socket.on('order_updated', (order) => {
+                console.log('📡 [MyOrders] "order_updated" event');
+                handleOrderUpdate(order);
+            });
         }
 
         return () => {
+            console.log('🔌 [MyOrders] Cleaning up socket listeners');
             socket.off('order_status_updated');
             socket.off('order_updated');
         };
