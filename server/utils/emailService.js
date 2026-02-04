@@ -9,10 +9,13 @@ const sendEmail = async (options) => {
             pass: process.env.EMAIL_PASS,
         },
         tls: {
-            rejectUnauthorized: false // Helps with some cloud provider network issues
+            rejectUnauthorized: false
         },
-        logger: true, // Log SMTP info for debugging
-        debug: true   // Include debug info
+        logger: true,
+        debug: true,
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 5000,    // 5 seconds
+        socketTimeout: 10000      // 10 seconds
     });
 
     const message = {
