@@ -1,22 +1,15 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // Standard "Cloud-Safe" Gmail Configuration
-    // Port 587 is STARTTLS, which is usually open on containers where 25 and 465 are blocked.
+    // Simple Gmail Service (Works now because server.js forces IPv4)
     const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // Must be false for port 587
+        service: 'gmail',
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
-        tls: {
-            rejectUnauthorized: false // Helps with cloud self-signed certs
-        },
-        connectionTimeout: 15000, // 15 seconds
-        greetingTimeout: 15000,
-        socketTimeout: 15000
+        connectionTimeout: 20000,
+        greetingTimeout: 20000
     });
 
     const message = {
