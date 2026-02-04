@@ -36,12 +36,24 @@ export const AuthProvider = ({ children }) => {
             const { data } = await axios.post(`${API_URL}/auth/register`, {
                 name, email, password, phone, role: 'student'
             });
+            // Don't log in yet. Just return success.
+            toast.success('OTP sent to your email!');
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Registration failed');
+            return false;
+        }
+    };
+
+    const verifyOTP = async (email, otp) => {
+        try {
+            const { data } = await axios.post(`${API_URL}/auth/verify`, { email, otp });
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             toast.success('Registration successful!');
             return true;
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Registration failed');
+            toast.error(error.response?.data?.message || 'Verification failed');
             return false;
         }
     };
@@ -53,7 +65,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, verifyOTP, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );
