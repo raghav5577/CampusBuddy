@@ -1,22 +1,23 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // Use 'service: gmail' with relaxed security for cloud environments
+    // Use port 587 (STARTTLS) which is more reliable on cloud hosting than 465
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // true for 465, false for other ports
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
         tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            ciphers: 'SSLv3'
         },
         logger: true,
         debug: true,
         connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 10000,
-        family: 4 // Force IPv4 to prevent ENETUNREACH errors on IPv6-limited networks
+        family: 4 // Force IPv4
     });
 
     const message = {
