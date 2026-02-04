@@ -1,13 +1,18 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // Use 'service: gmail' which automatically handles host/port/secure settings correctly
+    // Use 'service: gmail' with relaxed security for cloud environments
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
+        tls: {
+            rejectUnauthorized: false // Helps with some cloud provider network issues
+        },
+        logger: true, // Log SMTP info for debugging
+        debug: true   // Include debug info
     });
 
     const message = {
