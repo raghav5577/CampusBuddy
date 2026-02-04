@@ -12,9 +12,12 @@ const sendEmail = async (options) => {
             pass: process.env.EMAIL_PASS, // Will read from your Render Env Vars
         },
         tls: {
-            ciphers: 'SSLv3',           // Necessary for some older container protocols
-            rejectUnauthorized: false   // IGNORE certificate errors (crucial for cloud inter-connectivity)
-        }
+            ciphers: 'SSLv3',
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 10000, // 10 seconds max
+        greetingTimeout: 5000,
+        socketTimeout: 10000
     });
 
     const message = {
