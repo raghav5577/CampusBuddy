@@ -8,16 +8,15 @@ const sendEmail = async (options) => {
         port: 587,
         secure: false, // Must be false for port 587
         auth: {
-            user: process.env.EMAIL_USER, // Will read from your Render Env Vars
-            pass: process.env.EMAIL_PASS, // Will read from your Render Env Vars
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
         },
         tls: {
-            ciphers: 'SSLv3',
-            rejectUnauthorized: false
+            rejectUnauthorized: false // Helps with cloud self-signed certs
         },
-        connectionTimeout: 10000, // 10 seconds max
-        greetingTimeout: 5000,
-        socketTimeout: 10000
+        connectionTimeout: 15000, // 15 seconds
+        greetingTimeout: 15000,
+        socketTimeout: 15000
     });
 
     const message = {
