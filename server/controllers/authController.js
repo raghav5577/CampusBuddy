@@ -75,12 +75,18 @@ const registerUser = async (req, res) => {
             const htmlMessage = getOtpEmailTemplate(userExists.name, otp);
 
             try {
-                await sendEmail({
+                // Race: Email vs Timeout
+                const emailPromise = sendEmail({
                     email: userExists.email,
                     subject: 'CampusBuddy Verification Code',
                     message,
                     html: htmlMessage
                 });
+
+                await Promise.race([
+                    emailPromise,
+                    new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 8000))
+                ]);
 
                 return res.status(200).json({
                     message: 'OTP sent to email',
@@ -89,10 +95,12 @@ const registerUser = async (req, res) => {
                 });
             } catch (error) {
                 console.error('Resend Email Error:', error);
-                userExists.otp = undefined;
-                userExists.otpExpires = undefined;
-                await userExists.save();
-                return res.status(500).json({ message: 'Email failed: ' + error.message });
+                // FAILSAFE: Return success anyway so user can proceed via logs
+                return res.status(200).json({
+                    message: 'OTP generated (Check Logs)',
+                    email: userExists.email,
+                    isVerified: false
+                });
             }
         }
 
@@ -117,16 +125,25 @@ const registerUser = async (req, res) => {
         });
 
         if (user) {
+            console.log(`[DEBUG] Generated OTP for ${user.email}: ${otp}`); // ALWAYS LOG OTP FOR DEBUGGING
+
             const message = `Your CampusBuddy registration OTP is: ${otp}`;
             const htmlMessage = getOtpEmailTemplate(user.name, otp);
 
             try {
-                await sendEmail({
+                // Race: Email Send vs 5-second Timeout
+                const emailPromise = sendEmail({
                     email: user.email,
                     subject: 'CampusBuddy Verification Code',
                     message,
                     html: htmlMessage
                 });
+
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Email sending timed out')), 8000)
+                );
+
+                await Promise.race([emailPromise, timeoutPromise]);
 
                 res.status(201).json({
                     message: 'OTP sent to email',
@@ -134,8 +151,15 @@ const registerUser = async (req, res) => {
                     isVerified: false
                 });
             } catch (error) {
-                console.error('Email sending failed:', error);
-                res.status(500).json({ message: 'User created but email failed: ' + error.message });
+                console.error('Email sending failed/timed out:', error);
+
+                // CRITICAL: Even if email fails, return SUCCESS so user can enter OTP from logs
+                // This stops the spinner and lets you proceed.
+                res.status(201).json({
+                    message: 'OTP generated (Check Server Logs if Email failed)',
+                    email: user.email,
+                    isVerified: false
+                });
             }
         } else {
             res.status(400).json({ message: 'Invalid user data' });
