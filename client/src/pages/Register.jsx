@@ -1,14 +1,13 @@
 import { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import AuthContext from '../context/AuthContext';
-import { FaArrowRight } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { motion } from 'framer-motion';
+import { FaUser, FaEnvelope, FaLock, FaPhone } from 'react-icons/fa';
+import PageTransition from '../components/PageTransition';
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
-    const [otp, setOtp] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
-    const { register, verifyOTP } = useContext(AuthContext);
+    const { register } = useContext(AuthContext);
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,175 +17,123 @@ const Register = () => {
         const success = await register(formData.name, formData.email, formData.password, formData.phone);
         setIsSubmitting(false);
         if (success) {
-            setOtpSent(true);
-        }
-    };
-
-    const handleVerifyParams = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        const success = await verifyOTP(formData.email, otp);
-        setIsSubmitting(false);
-        if (success) {
             navigate('/');
         }
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center px-6 py-24">
-            {/* Subtle gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-black to-black pointer-events-none" />
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative z-10 w-full max-w-md"
-            >
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-white tracking-tight mb-3">
-                        {otpSent ? 'Verify Email' : 'Create an account'}
-                    </h1>
-                    <p className="text-[#666]">
-                        {otpSent ? `Enter the OTP sent to ${formData.email}` : 'Get started with CampusBuddy'}
-                    </p>
-                </div>
-
-                {/* Register Card */}
-                <div className="bg-[#0a0a0a] border border-[#222] rounded-xl p-8">
-                    {!otpSent ? (
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <div>
-                                <label className="block text-[#888] text-sm font-medium mb-2">
-                                    Full Name
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-3 bg-black border border-[#333] rounded-lg text-white placeholder-[#555] focus:outline-none focus:border-white transition-colors"
-                                    placeholder="John Doe"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[#888] text-sm font-medium mb-2">
-                                    Email Address
-                                </label>
-                                <input
-                                    type="email"
-                                    className="w-full px-4 py-3 bg-black border border-[#333] rounded-lg text-white placeholder-[#555] focus:outline-none focus:border-white transition-colors"
-                                    placeholder="you@example.com"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[#888] text-sm font-medium mb-2">
-                                    Phone Number
-                                </label>
-                                <input
-                                    type="tel"
-                                    className="w-full px-4 py-3 bg-black border border-[#333] rounded-lg text-white placeholder-[#555] focus:outline-none focus:border-white transition-colors"
-                                    placeholder="+91 9876543210"
-                                    value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[#888] text-sm font-medium mb-2">
-                                    Password
-                                </label>
-                                <input
-                                    type="password"
-                                    className="w-full px-4 py-3 bg-black border border-[#333] rounded-lg text-white placeholder-[#555] focus:outline-none focus:border-white transition-colors"
-                                    placeholder="••••••••"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    required
-                                />
-                                <p className="text-[#555] text-xs mt-2">Must be at least 6 characters</p>
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full flex items-center justify-center gap-2 bg-white text-black py-3 px-6 rounded-lg font-semibold text-sm hover:bg-[#eee] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
-                            >
-                                {isSubmitting ? (
-                                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        Get OTP
-                                        <FaArrowRight className="text-xs" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
-                    ) : (
-                        <form onSubmit={handleVerifyParams} className="space-y-5">
-                            <div>
-                                <label className="block text-[#888] text-sm font-medium mb-2">
-                                    OTP Code
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-3 bg-black border border-[#333] rounded-lg text-white placeholder-[#555] focus:outline-none focus:border-white transition-colors text-center text-2xl tracking-widest"
-                                    placeholder="123456"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
-                                    required
-                                    maxLength={6}
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full flex items-center justify-center gap-2 bg-white text-black py-3 px-6 rounded-lg font-semibold text-sm hover:bg-[#eee] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
-                            >
-                                {isSubmitting ? (
-                                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        Verify Email
-                                        <FaArrowRight className="text-xs" />
-                                    </>
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setOtpSent(false)}
-                                className="w-full text-[#666] text-sm hover:text-white transition-colors mt-4"
-                            >
-                                Back to Registration
-                            </button>
-                        </form>
-                    )}
-
-                    <div className="relative my-8">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-[#222]" />
-                        </div>
-                        <div className="relative flex justify-center text-xs">
-                            <span className="px-4 bg-[#0a0a0a] text-[#666]">OR</span>
-                        </div>
+        <PageTransition>
+            <div className="min-h-screen pt-20 pb-10 flex items-center justify-center px-4">
+                <div className="max-w-md w-full bg-secondary/30 backdrop-blur-md p-8 rounded-2xl border border-gray-800">
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                            Join CampusBuddy
+                        </h2>
+                        <p className="text-gray-400 mt-2">Start your delicious journey today</p>
                     </div>
 
-                    <p className="text-center text-[#666] text-sm">
-                        Already have an account?{' '}
-                        <Link to="/login" className="text-white hover:underline">
-                            Sign in
-                        </Link>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
+                                <div className="relative">
+                                    <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        placeholder="John Doe"
+                                        className="w-full bg-black/50 border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary transition-colors"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Email Address</label>
+                                <div className="relative">
+                                    <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                    <input
+                                        type="email"
+                                        placeholder="john@example.com"
+                                        className="w-full bg-black/50 border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary transition-colors"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Phone Number</label>
+                                <div className="relative">
+                                    <FaPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                    <input
+                                        type="tel"
+                                        placeholder="1234567890"
+                                        className="w-full bg-black/50 border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary transition-colors"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
+                                <div className="relative">
+                                    <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                    <input
+                                        type="password"
+                                        placeholder="••••••"
+                                        className="w-full bg-black/50 border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary transition-colors"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        required
+                                        minLength="6"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center h-12"
+                        >
+                            {isSubmitting ? (
+                                <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                "Create Account"
+                            )}
+                        </motion.button>
+
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-800"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-[#0a0a0a] text-gray-500">OR</span>
+                            </div>
+                        </div>
+
+                        <p className="text-center text-gray-400">
+                            Already have an account?{' '}
+                            <Link to="/login" className="text-white hover:underline font-medium">
+                                Sign in
+                            </Link>
+                        </p>
+                    </form>
+
+                    <p className="text-xs text-center text-gray-600 mt-6">
+                        By creating an account, you agree to our Terms of Service and Privacy Policy.
                     </p>
                 </div>
-
-                {/* Terms */}
-                <p className="text-center text-[#555] text-xs mt-6">
-                    By creating an account, you agree to our Terms of Service and Privacy Policy.
-                </p>
-            </motion.div>
-        </div>
+            </div>
+        </PageTransition>
     );
 };
 

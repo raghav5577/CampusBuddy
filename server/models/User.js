@@ -39,16 +39,6 @@ const userSchema = new mongoose.Schema({
         ref: 'Outlet'
         // Only if role is admin
     },
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
-    otp: {
-        type: String
-    },
-    otpExpires: {
-        type: Date
-    },
     createdAt: {
         type: Date,
         default: Date.now
