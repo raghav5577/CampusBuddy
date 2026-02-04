@@ -1,35 +1,22 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (options) => {
-    // Try Port 465 (SSL) with Forced IPv4. If 587 timed out, 465 might work.
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // Use SSL
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-        tls: {
-            rejectUnauthorized: false
-        },
-        family: 4, // FORCE IPv4 to avoid ENETUNREACH
-        logger: true,
-        debug: true,
-        connectionTimeout: 10000
-    });
+    try {
+        const data = await resend.emails.send({
+            from: 'CampusBuddy <onboarding@resend.dev>', // Use this default until you verify a domain
+            to: options.email,
+            subject: options.subject,
+            html: options.html || options.message.replace(/\n/g, '<br>')
+        });
 
-    const message = {
-        from: `${process.env.FROM_NAME || 'CampusBuddy'} <${process.env.EMAIL_USER}>`,
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-        html: options.html
-    };
-
-    const info = await transporter.sendMail(message);
-
-    console.log('Message sent: %s', info.messageId);
+        console.log('Email sent successfully:', data);
+        return data;
+    } catch (error) {
+        console.error('Resend Email Error:', error);
+        throw new Error(error.message);
+    }
 };
 
 module.exports = sendEmail;

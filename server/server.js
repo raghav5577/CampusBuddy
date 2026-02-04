@@ -1,12 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-// Force IPv4 locally to fix cloud SMTP issues (ENETUNREACH)
-const dns = require('node:dns');
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
-
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
