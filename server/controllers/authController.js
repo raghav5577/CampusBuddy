@@ -88,10 +88,11 @@ const registerUser = async (req, res) => {
                     isVerified: false
                 });
             } catch (error) {
+                console.error('Resend Email Error:', error);
                 userExists.otp = undefined;
                 userExists.otpExpires = undefined;
                 await userExists.save();
-                return res.status(500).json({ message: 'Email could not be sent' });
+                return res.status(500).json({ message: 'Email failed: ' + error.message });
             }
         }
 
