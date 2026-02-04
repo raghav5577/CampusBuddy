@@ -13,9 +13,10 @@ const sendEmail = async (options) => {
         },
         logger: true,
         debug: true,
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 5000,    // 5 seconds
-        socketTimeout: 10000      // 10 seconds
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000,
+        family: 4 // Force IPv4 to prevent ENETUNREACH errors on IPv6-limited networks
     });
 
     const message = {
