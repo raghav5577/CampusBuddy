@@ -2,19 +2,45 @@ import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { FaUser, FaEnvelope, FaLock, FaPhone } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaPhone, FaKey } from 'react-icons/fa';
 import PageTransition from '../components/PageTransition';
+import axios from 'axios';
+import { API_URL } from '../config';
+import { toast } from 'react-toastify';
 
 const Register = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '', otp: '' });
     const { register } = useContext(AuthContext);
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [otpSent, setOtpSent] = useState(false);
+
+    const handleSendOtp = async (e) => {
+        e.preventDefault(); // Prevent form submission
+        if (!formData.phone) {
+            toast.error("Please enter phone number");
+            return;
+        }
+        try {
+            const res = await axios.post(`${API_URL}/auth/send-otp`, { phone: formData.phone });
+            if (res.status === 200) {
+                setOtpSent(true);
+                toast.success("OTP sent successfully");
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to send OTP");
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        const success = await register(formData.name, formData.email, formData.password, formData.phone);
+        if (!otpSent) {
+            toast.error("Please verify your phone number first");
+            setIsSubmitting(false);
+            return;
+        }
+        const success = await register(formData.name, formData.email, formData.password, formData.phone, formData.otp);
         setIsSubmitting(false);
         if (success) {
             navigate('/');
@@ -71,13 +97,49 @@ const Register = () => {
                                     <input
                                         type="tel"
                                         placeholder="1234567890"
-                                        className="w-full bg-black/50 border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary transition-colors"
+                                        className="w-full bg-black/50 border border-gray-800 rounded-lg py-3 pl-10 pr-24 text-white focus:outline-none focus:border-primary transition-colors"
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         required
+                                        disabled={otpSent}
                                     />
+                                    {!otpSent && (
+                                        <button
+                                            type="button"
+                                            onClick={handleSendOtp}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-primary/20 text-primary hover:bg-primary/30 px-3 py-1.5 rounded transition-colors"
+                                        >
+                                            Send OTP
+                                        </button>
+                                    )}
+                                    {otpSent && (
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xs font-bold">
+                                            Sent
+                                        </span>
+                                    )}
                                 </div>
                             </div>
+
+                            {otpSent && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                >
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Enter OTP</label>
+                                    <div className="relative">
+                                        <FaKey className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            placeholder="123456"
+                                            className="w-full bg-black/50 border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-primary transition-colors"
+                                            value={formData.otp}
+                                            onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Enter the 6-digit code sent to your phone</p>
+                                </motion.div>
+                            )}
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
