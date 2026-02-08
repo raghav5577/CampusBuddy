@@ -82,9 +82,10 @@ const toggleOutletStatus = async (req, res) => {
             return res.status(404).json({ message: 'Outlet not found' });
         }
 
-        outlet.isOpen = !outlet.isOpen;
-        await outlet.save();
+        // Use updateOne to avoid validation errors on legacy data with missing fields
+        await Outlet.updateOne({ _id: outlet._id }, { $set: { isOpen: !outlet.isOpen } });
 
+        outlet.isOpen = !outlet.isOpen;
         res.json(outlet);
     } catch (error) {
         console.error(error);
