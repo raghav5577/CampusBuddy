@@ -11,12 +11,6 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
     const { user } = useContext(AuthContext);
 
-    // If user is admin, they shouldn't see the landing page, 
-    // they should see the kitchen dashboard (Admin Page).
-    if (user && user.role === 'admin') {
-        return <Navigate to="/admin" replace />;
-    }
-
     useEffect(() => {
         const fetchOutlets = async () => {
             try {
@@ -30,6 +24,12 @@ const Home = () => {
         };
         fetchOutlets();
     }, []);
+
+    // If user is admin, they shouldn't see the landing page, 
+    // they should see the kitchen dashboard (Admin Page).
+    if (user && user.role === 'admin') {
+        return <Navigate to="/admin" replace />;
+    }
 
     // Transform outlets to FlowingMenu items format
     const menuItems = outlets.map(outlet => ({
