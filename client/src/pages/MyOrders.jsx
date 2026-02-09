@@ -132,6 +132,7 @@ const MyOrders = () => {
                         {orders.map((order, index) => {
                             const currentStep = getCurrentStepIndex(order.status);
                             const isCompleted = order.status === 'picked-up';
+                            const isCancelled = order.status === 'cancelled';
 
                             return (
                                 <motion.div
@@ -139,7 +140,7 @@ const MyOrders = () => {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.05 }}
-                                    className={`p-6 rounded-xl border transition-all ${isCompleted ? 'border-[#222] bg-[#0a0a0a] opacity-75 grayscale-[0.5]' : 'border-[#333] bg-[#0a0a0a] shadow-[0_0_30px_rgba(0,112,243,0.05)]'}`}
+                                    className={`p-6 rounded-xl border transition-all ${isCompleted || isCancelled ? 'border-[#222] bg-[#0a0a0a] opacity-75' : 'border-[#333] bg-[#0a0a0a] shadow-[0_0_30px_rgba(0,112,243,0.05)]'}`}
                                 >
                                     {/* Order Header */}
                                     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -164,44 +165,51 @@ const MyOrders = () => {
                                     </div>
 
                                     {/* Progress Tracker (Pizza Tracker Style) */}
-                                    <div className="relative mb-8 px-2">
-                                        {/* Progress Bar Background */}
-                                        <div className="absolute top-1/2 left-0 w-full h-1 bg-[#222] -translate-y-1/2 rounded-full z-0" />
-
-                                        {/* Active Progress Bar */}
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-                                            className="absolute top-1/2 left-0 h-1 bg-[#0070f3] -translate-y-1/2 rounded-full z-0 transition-all duration-1000 ease-out"
-                                        />
-
-                                        {/* Steps */}
-                                        <div className="relative z-10 flex justify-between">
-                                            {steps.map((step, i) => {
-                                                const isActive = i <= currentStep;
-                                                const isCurrent = i === currentStep;
-
-                                                return (
-                                                    <div key={step.status} className="flex flex-col items-center">
-                                                        <motion.div
-                                                            initial={false}
-                                                            animate={{
-                                                                scale: isCurrent ? 1.2 : 1,
-                                                                backgroundColor: isActive ? (isCompleted ? '#333' : '#0070f3') : '#111',
-                                                                borderColor: isActive ? (isCompleted ? '#333' : '#0070f3') : '#333'
-                                                            }}
-                                                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mb-2 transition-colors duration-500`}
-                                                        >
-                                                            <step.icon className={`text-[10px] ${isActive ? 'text-white' : 'text-[#666]'}`} />
-                                                        </motion.div>
-                                                        <span className={`text-[10px] font-medium transition-colors duration-300 ${isActive ? 'text-white' : 'text-[#444]'}`}>
-                                                            {step.label}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
+                                    {isCancelled ? (
+                                        <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
+                                            <p className="text-red-500 font-bold mb-1">Order Cancelled</p>
+                                            <p className="text-red-400/80 text-sm">This order was cancelled by the outlet.</p>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="relative mb-8 px-2">
+                                            {/* Progress Bar Background */}
+                                            <div className="absolute top-1/2 left-0 w-full h-1 bg-[#222] -translate-y-1/2 rounded-full z-0" />
+
+                                            {/* Active Progress Bar */}
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+                                                className="absolute top-1/2 left-0 h-1 bg-[#0070f3] -translate-y-1/2 rounded-full z-0 transition-all duration-1000 ease-out"
+                                            />
+
+                                            {/* Steps */}
+                                            <div className="relative z-10 flex justify-between">
+                                                {steps.map((step, i) => {
+                                                    const isActive = i <= currentStep;
+                                                    const isCurrent = i === currentStep;
+
+                                                    return (
+                                                        <div key={step.status} className="flex flex-col items-center">
+                                                            <motion.div
+                                                                initial={false}
+                                                                animate={{
+                                                                    scale: isCurrent ? 1.2 : 1,
+                                                                    backgroundColor: isActive ? (isCompleted ? '#333' : '#0070f3') : '#111',
+                                                                    borderColor: isActive ? (isCompleted ? '#333' : '#0070f3') : '#333'
+                                                                }}
+                                                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mb-2 transition-colors duration-500`}
+                                                            >
+                                                                <step.icon className={`text-[10px] ${isActive ? 'text-white' : 'text-[#666]'}`} />
+                                                            </motion.div>
+                                                            <span className={`text-[10px] font-medium transition-colors duration-300 ${isActive ? 'text-white' : 'text-[#444]'}`}>
+                                                                {step.label}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Items List (Collapsible-ish) */}
                                     <div className="bg-[#111] rounded-lg p-4 border border-[#222]">
@@ -216,7 +224,7 @@ const MyOrders = () => {
                                         ))}
                                     </div>
 
-                                    {!isCompleted && (
+                                    {!isCompleted && !isCancelled && (
                                         <div className="mt-4 text-center">
                                             <p className="text-[#0070f3] text-xs animate-pulse">
                                                 Live updates enabled • Auto-refreshing status

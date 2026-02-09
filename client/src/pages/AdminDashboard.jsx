@@ -170,6 +170,7 @@ const AdminDashboard = () => {
             preparing: { bg: 'border-l-[#7928ca]', badge: 'bg-[#7928ca]/10 text-[#7928ca] border-[#7928ca]/20' },
             ready: { bg: 'border-l-[#50e3c2]', badge: 'bg-[#50e3c2]/10 text-[#50e3c2] border-[#50e3c2]/20' },
             'picked-up': { bg: 'border-l-[#666]', badge: 'bg-[#333] text-[#888] border-[#444]' },
+            cancelled: { bg: 'border-l-red-500', badge: 'bg-red-500/10 text-red-500 border-red-500/20' },
         };
         return styles[status] || styles.pending;
     };
@@ -253,13 +254,14 @@ const AdminDashboard = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+                            className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
                         >
                             {[
                                 { label: 'Pending', value: orders.filter(o => o.status === 'pending').length, color: '#f5a623' },
                                 { label: 'Preparing', value: orders.filter(o => o.status === 'preparing').length, color: '#7928ca' },
                                 { label: 'Ready', value: orders.filter(o => o.status === 'ready').length, color: '#50e3c2' },
                                 { label: 'Completed', value: orders.filter(o => o.status === 'picked-up').length, color: '#666' },
+                                { label: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, color: '#ef4444' },
                             ].map((stat, i) => (
                                 <div key={i} className="p-4 rounded-xl border border-[#222] bg-[#0a0a0a] text-center">
                                     <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
@@ -275,7 +277,7 @@ const AdminDashboard = () => {
                             </div>
                         ) : (
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {orders.filter(o => o.status !== 'picked-up').map((order, index) => {
+                                {orders.filter(o => o.status !== 'picked-up' && o.status !== 'cancelled').map((order, index) => {
                                     const statusStyle = getStatusStyles(order.status);
                                     const actionBtn = getActionButton(order);
 
@@ -318,15 +320,29 @@ const AdminDashboard = () => {
                                                 ))}
                                             </div>
 
-                                            {actionBtn && (
+                                            <div className="flex gap-2">
+                                                {actionBtn && (
+                                                    <button
+                                                        onClick={() => updateStatus(order._id, actionBtn.action)}
+                                                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm text-white transition-all ${actionBtn.style}`}
+                                                    >
+                                                        <actionBtn.icon />
+                                                        {actionBtn.label}
+                                                    </button>
+                                                )}
+
                                                 <button
-                                                    onClick={() => updateStatus(order._id, actionBtn.action)}
-                                                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm text-white transition-all ${actionBtn.style}`}
+                                                    onClick={() => {
+                                                        if (window.confirm('Are you sure you want to cancel this order?')) {
+                                                            updateStatus(order._id, 'cancelled');
+                                                        }
+                                                    }}
+                                                    className="px-4 py-3 rounded-lg font-semibold text-sm text-red-500 border border-red-500/30 hover:bg-red-500/10 transition-all"
+                                                    title="Cancel Order"
                                                 >
-                                                    <actionBtn.icon />
-                                                    {actionBtn.label}
+                                                    Cancel
                                                 </button>
-                                            )}
+                                            </div>
                                         </motion.div>
                                     );
                                 })}
