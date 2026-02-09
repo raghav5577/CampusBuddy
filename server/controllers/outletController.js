@@ -82,11 +82,17 @@ const toggleOutletStatus = async (req, res) => {
             return res.status(404).json({ message: 'Outlet not found' });
         }
 
-        // Use updateOne to avoid validation errors on legacy data with missing fields
-        await Outlet.updateOne({ _id: outlet._id }, { $set: { isOpen: !outlet.isOpen } });
+        // Use findByIdAndUpdate to avoid validation errors on legacy data with missing fields
+        // and get the updated document in one go.
+        const updatedOutlet = await Outlet.findByIdAndUpdate(
+            req.params.id,
+            { isOpen: !outlet.isOpen },
+            { new: true }
+        );
 
-        outlet.isOpen = !outlet.isOpen;
-        res.json(outlet);
+        console.log(`[Outlet] Toggled status for ${outlet.name} (${outlet._id}) to ${updatedOutlet.isOpen}`);
+
+        res.json(updatedOutlet);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });

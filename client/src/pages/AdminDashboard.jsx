@@ -107,6 +107,10 @@ const AdminDashboard = () => {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const { data } = await axios.patch(`${API_URL}/outlets/${selectedOutletId}/toggle-status`, {}, config);
             setCurrentOutlet(data); // data is the updated outlet
+
+            // Update outlets list to reflect change in dropdown
+            setOutlets(prev => prev.map(o => o._id === data._id ? { ...o, isOpen: data.isOpen } : o));
+
             if (data.isOpen) toast.success("Store is now OPEN");
             else toast.warn("Store is now CLOSED");
         } catch (error) {
@@ -200,8 +204,8 @@ const AdminDashboard = () => {
                                     <button
                                         onClick={toggleOutletStatus}
                                         className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold transition-all ${isOutletOpen
-                                                ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                                                : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
+                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+                                            : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
                                             }`}
                                     >
                                         {isOutletOpen ? <FaToggleOn className="text-lg" /> : <FaToggleOff className="text-lg" />}
