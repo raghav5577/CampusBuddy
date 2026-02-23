@@ -15,12 +15,18 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup
+// Socket.io setup with enhanced configuration for production
 const io = new Server(server, {
     cors: {
         origin: process.env.CLIENT_URL || 'http://localhost:5173',
-        methods: ['GET', 'POST', 'PATCH', 'DELETE']
-    }
+        methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+        credentials: true
+    },
+    transports: ['websocket', 'polling'],
+    allowEIO3: true,
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    connectTimeout: 45000
 });
 
 // Make io accessible to routes/controllers
@@ -40,9 +46,26 @@ io.on('connection', (socket) => {
     });
 });
 
-// CORS
+// CORS - Allow multiple origins
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    process.env.CLIENT_URL || 'https://your-vercel-app.vercel.app'
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.some(allowed => origin.includes(allowed))) {
+            callback(null, true);
+        } else {
+            console.log('❌ CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 

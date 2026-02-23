@@ -18,6 +18,7 @@ import About from './pages/About';
 import Stores from './pages/Stores';
 import Contact from './pages/Contact';
 import UserProfile from './pages/UserProfile';
+import Debug from './pages/Debug';
 import ProtectedRoute from './components/ProtectedRoute';
 import PageTransition from './components/PageTransition';
 
@@ -37,6 +38,7 @@ function AnimatedRoutes() {
         <Route path="/stores" element={<PageTransition><Stores /></PageTransition>} />
         <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><ProtectedRoute><UserProfile /></ProtectedRoute></PageTransition>} />
+        <Route path="/debug" element={<PageTransition><Debug /></PageTransition>} />
 
         <Route path="/orders" element={<PageTransition><ProtectedRoute><MyOrders /></ProtectedRoute></PageTransition>} />
         <Route path="/admin" element={<PageTransition><ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute></PageTransition>} />
