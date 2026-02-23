@@ -1,74 +1,78 @@
 const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-// Force IPv4 locally to fix cloud SMTP issues (ENETUNREACH / Timeout)
-const dns = require('node:dns');
-if (dns && dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
-
 const http = require('http');
 const { Server } = require('socket.io');
+const dotenv = require('dotenv');
+const cors = require('cors');
+
 const connectDB = require('./config/db');
 
 // Load env vars
 dotenv.config();
 
-// Connect to database
+// Connect to MongoDB
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
 
-// Middleware
-app.use(cors({
-    origin: true, // Allow any origin that sends the request
-    credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Socket.io Setup
+// Socket.io setup
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allow all for socket.io dev
-        methods: ["GET", "POST"]
+        origin: process.env.CLIENT_URL || 'http://localhost:5173',
+        methods: ['GET', 'POST', 'PATCH', 'DELETE']
     }
 });
 
+// Make io accessible to routes/controllers
+app.set('io', io);
+
+// Socket.io events
 io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.id}`);
+    console.log(`🔌 Socket connected: ${socket.id}`);
 
-    socket.on('join_outlet', (outletId) => {
-        socket.join(outletId);
-        console.log(`Socket ${socket.id} joined outlet ${outletId}`);
-    });
-
-    socket.on('join_user_room', (userId) => {
-        socket.join(userId);
-        console.log(`Socket ${socket.id} joined user room ${userId}`);
+    socket.on('join_room', (roomId) => {
+        socket.join(roomId);
+        console.log(`Socket ${socket.id} joined room: ${roomId}`);
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected');
+        console.log(`❌ Socket disconnected: ${socket.id}`);
     });
 });
 
-// Make io accessible in routes
-app.set('io', io);
+// CORS
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true
+}));
+
+// Body parsing
+app.use(express.json());
 
 // Routes
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
-
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/outlets', require('./routes/outletRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 
-const PORT = process.env.PORT || 5000;
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', message: 'CampusBuddy server is running' });
+});
 
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ message: `Route ${req.originalUrl} not found` });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal Server Error'
+    });
+});
+
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    // Restart trigger - fix db case
+    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

@@ -6,8 +6,7 @@ const MenuItem = require('../models/MenuItem');
 // @access  Public
 const getOutlets = async (req, res) => {
     try {
-        const query = req.query.all === 'true' ? {} : { isOpen: true };
-        const outlets = await Outlet.find(query);
+        const outlets = await Outlet.find().sort({ createdAt: -1 });
         res.json(outlets);
     } catch (error) {
         console.error(error);
@@ -15,82 +14,71 @@ const getOutlets = async (req, res) => {
     }
 };
 
-// @desc    Get outlet by ID with menu
+// @desc    Get single outlet by ID (with menu items)
 // @route   GET /api/outlets/:id
 // @access  Public
 const getOutletById = async (req, res) => {
     try {
-        const outlet = await Outlet.findById(req.params.id);
-
+        const outlet = await Outlet.findById(req.params.id).populate('menuItems');
         if (!outlet) {
             return res.status(404).json({ message: 'Outlet not found' });
         }
-
-        const menuItems = await MenuItem.find({ outletId: req.params.id });
-
-        res.json({ ...outlet.toObject(), menuItems });
+        res.json(outlet);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// @desc    Create new outlet
+// @desc    Create a new outlet
 // @route   POST /api/outlets
 // @access  Private/Admin
 const createOutlet = async (req, res) => {
     try {
-        const outlet = await Outlet.create(req.body);
-        res.status(201).json(outlet);
+        const outlet = new Outlet(req.body);
+        const createdOutlet = await outlet.save();
+        res.status(201).json(createdOutlet);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// @desc    Add menu item to outlet
+// @desc    Add a menu item to an outlet
 // @route   POST /api/outlets/:id/menu
 // @access  Private/Admin
 const addMenuItem = async (req, res) => {
     try {
         const outlet = await Outlet.findById(req.params.id);
-
         if (!outlet) {
             return res.status(404).json({ message: 'Outlet not found' });
         }
-
-        const menuItem = await MenuItem.create({
-            ...req.body,
-            outletId: req.params.id
-        });
-
-        res.status(201).json(menuItem);
+        const menuItem = new MenuItem({ ...req.body, outletId: outlet._id });
+        const savedItem = await menuItem.save();
+        res.status(201).json(savedItem);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// @desc    Toggle outlet status (Open/Close)
+// @desc    Toggle outlet open/closed status
 // @route   PATCH /api/outlets/:id/toggle-status
 // @access  Private/Admin
 const toggleOutletStatus = async (req, res) => {
     try {
         const outlet = await Outlet.findById(req.params.id);
-
         if (!outlet) {
             return res.status(404).json({ message: 'Outlet not found' });
         }
+        outlet.isOpen = !outlet.isOpen;
+        const updatedOutlet = await outlet.save();
 
-        // Use findByIdAndUpdate to avoid validation errors on legacy data with missing fields
-        // and get the updated document in one go.
-        const updatedOutlet = await Outlet.findByIdAndUpdate(
-            req.params.id,
-            { isOpen: !outlet.isOpen },
-            { new: true }
-        );
-
-        console.log(`[Outlet] Toggled status for ${outlet.name} (${outlet._id}) to ${updatedOutlet.isOpen}`);
+        // Notify via socket
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('outlet_status_changed', { outletId: outlet._id, isOpen: updatedOutlet.isOpen });
+        }
 
         res.json(updatedOutlet);
     } catch (error) {
