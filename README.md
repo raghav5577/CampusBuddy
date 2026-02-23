@@ -1,4 +1,4 @@
-# CampusBuddy - Bennett University Food Ordering Platform 🍔
+# CampusBuddy - University Food Ordering Platform 🍔
 
 A MERN stack platform allowing students to pre-order meals from campus outlets and restaurants to manage orders in real-time.
 
