@@ -87,10 +87,43 @@ const toggleOutletStatus = async (req, res) => {
     }
 };
 
+// @desc    Get all menu items for an outlet (admin use)
+// @route   GET /api/outlets/:id/menu
+// @access  Private/Admin
+const getMenuItems = async (req, res) => {
+    try {
+        const items = await MenuItem.find({ outletId: req.params.id }).sort({ category: 1, name: 1 });
+        res.json(items);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Toggle a menu item's availability
+// @route   PATCH /api/outlets/:id/menu/:itemId/toggle-availability
+// @access  Private/Admin
+const toggleMenuItemAvailability = async (req, res) => {
+    try {
+        const item = await MenuItem.findOne({ _id: req.params.itemId, outletId: req.params.id });
+        if (!item) {
+            return res.status(404).json({ message: 'Menu item not found' });
+        }
+        item.isAvailable = !item.isAvailable;
+        const updatedItem = await item.save();
+        res.json(updatedItem);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     getOutlets,
     getOutletById,
     createOutlet,
     addMenuItem,
+    getMenuItems,
+    toggleMenuItemAvailability,
     toggleOutletStatus
 };

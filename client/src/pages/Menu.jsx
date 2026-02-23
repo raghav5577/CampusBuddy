@@ -157,46 +157,70 @@ const Menu = () => {
             {/* Menu Items */}
             <div className="max-w-6xl mx-auto px-6 py-8">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredItems.map((item, index) => (
-                        <motion.div
-                            key={item._id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className={`group p-4 rounded-xl border border-[#222] bg-[#0a0a0a] transition-all ${!outlet.isOpen ? 'opacity-50' : 'hover:border-[#333]'}`}
-                        >
-                            <div className="flex gap-4">
-                                <img
-                                    src={item.image === 'no-food-photo.jpg' ? 'https://via.placeholder.com/80?text=Food' : item.image}
-                                    alt={item.name}
-                                    className="w-20 h-20 rounded-lg object-cover border border-[#222]"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2 mb-1">
-                                        <h3 className="font-medium text-white truncate">{item.name}</h3>
-                                        <span className="text-[#0070f3] font-semibold whitespace-nowrap">₹{item.price}</span>
+                    {filteredItems.map((item, index) => {
+                        const isUnavailable = !item.isAvailable;
+                        const isClosed = !outlet.isOpen;
+                        const blocked = isUnavailable || isClosed;
+
+                        return (
+                            <motion.div
+                                key={item._id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                className={`group p-4 rounded-xl border transition-all ${isUnavailable
+                                        ? 'border-[#1a1a1a] bg-[#080808] opacity-50 grayscale'
+                                        : isClosed
+                                            ? 'border-[#222] bg-[#0a0a0a] opacity-50'
+                                            : 'border-[#222] bg-[#0a0a0a] hover:border-[#333]'
+                                    }`}
+                            >
+                                <div className="flex gap-4">
+                                    <div className="relative flex-shrink-0">
+                                        <img
+                                            src={item.image === 'no-food-photo.jpg' ? 'https://via.placeholder.com/80?text=Food' : item.image}
+                                            alt={item.name}
+                                            className={`w-20 h-20 rounded-lg object-cover border border-[#222] ${isUnavailable ? 'grayscale' : ''}`}
+                                        />
+                                        {isUnavailable && (
+                                            <div className="absolute inset-0 rounded-lg bg-black/40 flex items-center justify-center">
+                                                <span className="text-[10px] font-bold text-red-400 bg-black/70 px-1.5 py-0.5 rounded">SOLD OUT</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className="text-[#666] text-sm line-clamp-2 mb-3">{item.description}</p>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[#555] text-xs flex items-center gap-1">
-                                            <FaClock className="text-[10px]" />
-                                            {item.prepTime || 10} min
-                                        </span>
-                                        <button
-                                            onClick={() => addToCart(item, outlet._id)}
-                                            disabled={!item.isAvailable || !outlet.isOpen}
-                                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${!outlet.isOpen
-                                                ? 'bg-[#222] text-[#666] cursor-not-allowed'
-                                                : 'bg-white text-black hover:bg-[#eee]'
-                                                }`}
-                                        >
-                                            {!outlet.isOpen ? 'Closed' : <><FaPlus className="text-[10px]" /> Add</>}
-                                        </button>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2 mb-1">
+                                            <h3 className={`font-medium truncate ${isUnavailable ? 'text-[#444] line-through decoration-[#555]' : 'text-white'
+                                                }`}>
+                                                {item.name}
+                                            </h3>
+                                            <span className={`font-semibold whitespace-nowrap ${isUnavailable ? 'text-[#444]' : 'text-[#0070f3]'
+                                                }`}>₹{item.price}</span>
+                                        </div>
+                                        <p className="text-[#666] text-sm line-clamp-2 mb-3">{item.description}</p>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[#555] text-xs flex items-center gap-1">
+                                                <FaClock className="text-[10px]" />
+                                                {item.prepTime || 10} min
+                                            </span>
+                                            <button
+                                                onClick={() => !blocked && addToCart(item, outlet._id)}
+                                                disabled={blocked}
+                                                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${isUnavailable
+                                                        ? 'bg-[#1a1a1a] text-[#555] cursor-not-allowed border border-[#222]'
+                                                        : isClosed
+                                                            ? 'bg-[#222] text-[#666] cursor-not-allowed'
+                                                            : 'bg-white text-black hover:bg-[#eee]'
+                                                    }`}
+                                            >
+                                                {isUnavailable ? '✕ Unavailable' : isClosed ? 'Closed' : <><FaPlus className="text-[10px]" /> Add</>}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
                 </div>
 
                 {filteredItems.length === 0 && (
