@@ -5,7 +5,7 @@ import socket from '../socket';
 import { toast } from 'react-toastify';
 import { API_URL } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheck, FaFire, FaBell, FaCheckCircle, FaStore, FaPrint, FaToggleOn, FaToggleOff, FaUtensils, FaClipboardList } from 'react-icons/fa';
+import { FaCheck, FaFire, FaBell, FaCheckCircle, FaStore, FaPrint, FaToggleOn, FaToggleOff, FaUtensils, FaClipboardList, FaSearch, FaTimes } from 'react-icons/fa';
 
 const AdminDashboard = () => {
     const [orders, setOrders] = useState([]);
@@ -17,6 +17,7 @@ const AdminDashboard = () => {
     const [menuItems, setMenuItems] = useState([]);
     const [menuLoading, setMenuLoading] = useState(false);
     const [togglingItemId, setTogglingItemId] = useState(null);
+    const [menuSearch, setMenuSearch] = useState('');
     const { user } = useContext(AuthContext);
 
     // Fetch Outlets
@@ -213,8 +214,15 @@ const AdminDashboard = () => {
         return buttons[order.status];
     };
 
-    // Group menu items by category
-    const menuByCategory = menuItems.reduce((acc, item) => {
+    // Group menu items by category (with search applied)
+    const searchedMenuItems = menuSearch.trim()
+        ? menuItems.filter(item =>
+            item.name.toLowerCase().includes(menuSearch.toLowerCase()) ||
+            item.description?.toLowerCase().includes(menuSearch.toLowerCase())
+        )
+        : menuItems;
+
+    const menuByCategory = searchedMenuItems.reduce((acc, item) => {
         const cat = item.category || 'Others';
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push(item);
@@ -412,29 +420,62 @@ const AdminDashboard = () => {
                         ) : (
                             /* ── MENU TAB ── */
                             <motion.div key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <div className="mb-6 flex items-center justify-between">
-                                    <div>
-                                        <h2 className="text-xl font-bold text-white">Menu Availability</h2>
-                                        <p className="text-[#666] text-sm mt-1">
-                                            Toggle items on/off. Unavailable items will be greyed out for customers.
-                                        </p>
-                                    </div>
-                                    {unavailableCount > 0 && (
-                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                                            <span className="text-red-400 text-sm font-medium">{unavailableCount} item{unavailableCount > 1 ? 's' : ''} unavailable</span>
+                                <div className="mb-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div>
+                                            <h2 className="text-xl font-bold text-white">Menu Availability</h2>
+                                            <p className="text-[#666] text-sm mt-1">
+                                                Toggle items on/off. Unavailable items will be greyed out for customers.
+                                            </p>
                                         </div>
-                                    )}
+                                        <div className="flex items-center gap-3">
+                                            {unavailableCount > 0 && (
+                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                                    <span className="text-red-400 text-sm font-medium">{unavailableCount} off</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Search bar */}
+                                    <div className="relative mt-4">
+                                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            value={menuSearch}
+                                            onChange={(e) => setMenuSearch(e.target.value)}
+                                            placeholder="Search items by name..."
+                                            className="w-full pl-9 pr-9 py-2.5 rounded-xl text-sm bg-[#111] border border-[#333] text-white placeholder-[#555] focus:outline-none focus:border-[#555] transition-colors"
+                                        />
+                                        {menuSearch && (
+                                            <button
+                                                onClick={() => setMenuSearch('')}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-white transition-colors"
+                                            >
+                                                <FaTimes className="text-xs" />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {menuLoading ? (
                                     <div className="flex justify-center py-20">
                                         <div className="w-10 h-10 border-2 border-[#333] border-t-white rounded-full animate-spin" />
                                     </div>
-                                ) : menuItems.length === 0 ? (
+                                ) : searchedMenuItems.length === 0 ? (
                                     <div className="text-center py-20 border border-[#222] rounded-xl bg-[#0a0a0a]">
-                                        <FaUtensils className="text-4xl text-[#333] mx-auto mb-4" />
-                                        <p className="text-[#666]">No menu items found</p>
+                                        {menuSearch ? (
+                                            <>
+                                                <p className="text-[#666] mb-2">No items match &ldquo;{menuSearch}&rdquo;</p>
+                                                <button onClick={() => setMenuSearch('')} className="text-sm text-[#0070f3] hover:underline">Clear search</button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaUtensils className="text-4xl text-[#333] mx-auto mb-4" />
+                                                <p className="text-[#666]">No menu items found</p>
+                                            </>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="space-y-8">
@@ -443,7 +484,7 @@ const AdminDashboard = () => {
                                                 <div className="flex items-center gap-3 mb-4">
                                                     <h3 className="text-sm font-semibold text-[#888] uppercase tracking-widest">{category}</h3>
                                                     <div className="flex-1 h-px bg-[#222]" />
-                                                    <span className="text-xs text-[#555]">{items.length} items</span>
+                                                    <span className="text-xs text-[#555]">{items.length} item{items.length > 1 ? 's' : ''}</span>
                                                 </div>
                                                 <div className="grid md:grid-cols-2 gap-3">
                                                     {items.map((item) => (

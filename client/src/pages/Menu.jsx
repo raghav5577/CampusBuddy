@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import CartContext from '../context/CartContext';
 import FloatingCart from '../components/FloatingCart';
-import { FaPlus, FaClock, FaArrowLeft, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaPlus, FaClock, FaArrowLeft, FaMapMarkerAlt, FaSearch, FaTimes } from 'react-icons/fa';
 import { API_URL } from '../config';
 import { motion } from 'framer-motion';
 
@@ -13,6 +13,7 @@ const Menu = () => {
     const [outlet, setOutlet] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
     const { addToCart } = useContext(CartContext);
 
     useEffect(() => {
@@ -62,9 +63,17 @@ const Menu = () => {
     }, {}) : {};
 
     const categories = ['All', ...Object.keys(menuByCategory)];
-    const filteredItems = activeCategory === 'All'
+    const baseItems = activeCategory === 'All'
         ? outlet.menuItems
         : menuByCategory[activeCategory] || [];
+
+    // Apply search filter on top of category filter
+    const filteredItems = searchQuery.trim()
+        ? baseItems.filter(item =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : baseItems;
 
     return (
         <div className="min-h-screen bg-black pt-20 pb-20">
@@ -133,23 +142,48 @@ const Menu = () => {
                 </div>
             </div>
 
-            {/* Category Tabs */}
+            {/* Category Tabs + Search */}
             <div className="sticky top-16 bg-black/80 backdrop-blur-xl border-b border-[#222] z-30">
-                {/* ... no changes needed to tabs ... */}
                 <div className="max-w-6xl mx-auto px-6">
-                    <div className="flex gap-2 py-4 overflow-x-auto no-scrollbar">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => setActiveCategory(cat)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategory === cat
-                                    ? 'bg-white text-black'
-                                    : 'bg-[#111] text-[#888] border border-[#333] hover:text-white hover:border-[#555]'
-                                    }`}
-                            >
-                                {cat}
-                            </button>
-                        ))}
+                    <div className="flex items-center gap-3 py-4">
+                        {/* Search Bar */}
+                        <div className="relative flex-shrink-0 w-52">
+                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search menu..."
+                                className="w-full pl-8 pr-8 py-2 rounded-lg text-sm bg-[#111] border border-[#333] text-white placeholder-[#555] focus:outline-none focus:border-[#555] transition-colors"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#555] hover:text-white transition-colors"
+                                >
+                                    <FaTimes className="text-xs" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Divider */}
+                        <div className="w-px h-6 bg-[#333] flex-shrink-0" />
+
+                        {/* Category pills */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setActiveCategory(cat)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategory === cat
+                                            ? 'bg-white text-black'
+                                            : 'bg-[#111] text-[#888] border border-[#333] hover:text-white hover:border-[#555]'
+                                        }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -169,10 +203,10 @@ const Menu = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
                                 className={`group p-4 rounded-xl border transition-all ${isUnavailable
-                                        ? 'border-[#1a1a1a] bg-[#080808] opacity-50 grayscale'
-                                        : isClosed
-                                            ? 'border-[#222] bg-[#0a0a0a] opacity-50'
-                                            : 'border-[#222] bg-[#0a0a0a] hover:border-[#333]'
+                                    ? 'border-[#1a1a1a] bg-[#080808] opacity-50 grayscale'
+                                    : isClosed
+                                        ? 'border-[#222] bg-[#0a0a0a] opacity-50'
+                                        : 'border-[#222] bg-[#0a0a0a] hover:border-[#333]'
                                     }`}
                             >
                                 <div className="flex gap-4">
@@ -207,10 +241,10 @@ const Menu = () => {
                                                 onClick={() => !blocked && addToCart(item, outlet._id)}
                                                 disabled={blocked}
                                                 className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${isUnavailable
-                                                        ? 'bg-[#1a1a1a] text-[#555] cursor-not-allowed border border-[#222]'
-                                                        : isClosed
-                                                            ? 'bg-[#222] text-[#666] cursor-not-allowed'
-                                                            : 'bg-white text-black hover:bg-[#eee]'
+                                                    ? 'bg-[#1a1a1a] text-[#555] cursor-not-allowed border border-[#222]'
+                                                    : isClosed
+                                                        ? 'bg-[#222] text-[#666] cursor-not-allowed'
+                                                        : 'bg-white text-black hover:bg-[#eee]'
                                                     }`}
                                             >
                                                 {isUnavailable ? '✕ Unavailable' : isClosed ? 'Closed' : <><FaPlus className="text-[10px]" /> Add</>}
@@ -225,7 +259,16 @@ const Menu = () => {
 
                 {filteredItems.length === 0 && (
                     <div className="text-center py-20">
-                        <p className="text-[#666]">No items in this category</p>
+                        {searchQuery ? (
+                            <>
+                                <p className="text-[#666] mb-2">No items match &ldquo;{searchQuery}&rdquo;</p>
+                                <button onClick={() => setSearchQuery('')} className="text-sm text-[#0070f3] hover:underline">
+                                    Clear search
+                                </button>
+                            </>
+                        ) : (
+                            <p className="text-[#666]">No items in this category</p>
+                        )}
                     </div>
                 )}
             </div>
