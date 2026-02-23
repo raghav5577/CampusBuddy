@@ -1,23 +1,28 @@
 import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import { Link, Navigate } from 'react-router-dom';
 import FlowingMenu from '../components/FlowingMenu';
-import { API_URL } from '../config';
 import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
+import { api } from '../api';
+import { toast } from 'react-toastify';
 
 const Home = () => {
     const [outlets, setOutlets] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const { user } = useContext(AuthContext);
 
     useEffect(() => {
         const fetchOutlets = async () => {
             try {
-                const { data } = await axios.get(`${API_URL}/outlets`);
+                setLoading(true);
+                const { data } = await api.get('/outlets');
                 setOutlets(data);
+                setError(null);
             } catch (error) {
-                console.error(error);
+                console.error('Error fetching outlets:', error);
+                setError(error.message || 'Failed to load outlets');
+                toast.error(error.message || 'Server is waking up, please refresh in a moment');
             } finally {
                 setLoading(false);
             }

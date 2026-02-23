@@ -1,10 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 import socket from '../socket';
-import { API_URL } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaReceipt, FaCheck, FaFire, FaBell, FaMotorcycle, FaCheckCircle, FaClock } from 'react-icons/fa';
+import { api } from '../api';
+import { toast } from 'react-toastify';
 
 const MyOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -14,13 +14,13 @@ const MyOrders = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const token = JSON.parse(localStorage.getItem('userInfo')).token;
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-                const { data } = await axios.get(`${API_URL}/orders/my`, config);
+                setLoading(true);
+                const { data } = await api.get('/orders/my');
                 // Sort by newest first
                 setOrders(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
             } catch (error) {
-                console.error(error);
+                console.error('Error loading orders:', error);
+                toast.error(error.message || 'Failed to load orders');
             } finally {
                 setLoading(false);
             }

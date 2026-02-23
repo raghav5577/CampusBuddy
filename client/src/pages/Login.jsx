@@ -21,7 +21,7 @@ const Login = () => {
                 const { data } = await axios.get(`${API_URL}/outlets`);
                 setOutlets(data);
             } catch (error) {
-                console.error(error);
+                console.error('Error loading outlets:', error);
             } finally {
                 setLoading(false);
             }

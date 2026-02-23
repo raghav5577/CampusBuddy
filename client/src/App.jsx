@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import { AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext';
@@ -21,6 +22,7 @@ import UserProfile from './pages/UserProfile';
 import Debug from './pages/Debug';
 import ProtectedRoute from './components/ProtectedRoute';
 import PageTransition from './components/PageTransition';
+import { wakeUpBackend } from './api';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -48,6 +50,23 @@ function AnimatedRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    // Wake up backend on app load (Render free tier sleeps after inactivity)
+    const initBackend = async () => {
+      const toastId = toast.info('⏳ Connecting to server...', { autoClose: false });
+      const success = await wakeUpBackend();
+      toast.dismiss(toastId);
+      
+      if (success) {
+        toast.success('✅ Connected to server!', { autoClose: 2000 });
+      } else {
+        toast.warning('⚠️ Server is waking up, this may take a minute...', { autoClose: 5000 });
+      }
+    };
+    
+    initBackend();
+  }, []);
+
   return (
     <AuthProvider>
       <CartProvider>

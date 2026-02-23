@@ -1,11 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 import CartContext from '../context/CartContext';
 import FloatingCart from '../components/FloatingCart';
 import { FaPlus, FaClock, FaArrowLeft, FaMapMarkerAlt, FaSearch, FaTimes } from 'react-icons/fa';
-import { API_URL } from '../config';
 import { motion } from 'framer-motion';
+import { api } from '../api';
+import { toast } from 'react-toastify';
 
 const Menu = () => {
     const { id } = useParams();
@@ -19,10 +19,12 @@ const Menu = () => {
     useEffect(() => {
         const fetchOutlet = async () => {
             try {
-                const { data } = await axios.get(`${API_URL}/outlets/${id}`);
+                setLoading(true);
+                const { data } = await api.get(`/outlets/${id}`);
                 setOutlet(data);
             } catch (error) {
-                console.error(error);
+                console.error('Error loading menu:', error);
+                toast.error(error.message || 'Failed to load menu');
             } finally {
                 setLoading(false);
             }

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import FlowingMenu from '../components/FlowingMenu';
-import { API_URL } from '../config';
 import { motion } from 'framer-motion';
+import { api } from '../api';
+import { toast } from 'react-toastify';
 
 const Stores = () => {
     const [outlets, setOutlets] = useState([]);
@@ -11,10 +11,12 @@ const Stores = () => {
     useEffect(() => {
         const fetchOutlets = async () => {
             try {
-                const { data } = await axios.get(`${API_URL}/outlets`);
+                setLoading(true);
+                const { data } = await api.get('/outlets');
                 setOutlets(data);
             } catch (error) {
-                console.error(error);
+                console.error('Error fetching outlets:', error);
+                toast.error(error.message || 'Failed to load outlets. Please refresh.');
             } finally {
                 setLoading(false);
             }
