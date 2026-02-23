@@ -18,7 +18,11 @@ const server = http.createServer(app);
 // Socket.io setup with enhanced configuration for production
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:5173',
+        origin: [
+            'http://localhost:5173',
+            'https://campusbuddy-gray.vercel.app',
+            process.env.CLIENT_URL
+        ].filter(Boolean),
         methods: ['GET', 'POST', 'PATCH', 'DELETE'],
         credentials: true
     },
@@ -51,18 +55,23 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://127.0.0.1:5173',
-    process.env.CLIENT_URL || 'https://your-vercel-app.vercel.app'
+    'https://campusbuddy-gray.vercel.app',
+    process.env.CLIENT_URL
 ].filter(Boolean);
+
+console.log('🔒 CORS allowed origins:', allowedOrigins);
 
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         
-        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.some(allowed => origin.includes(allowed))) {
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            console.log('✅ CORS allowed for:', origin);
             callback(null, true);
         } else {
             console.log('❌ CORS blocked origin:', origin);
+            console.log('   Allowed origins:', allowedOrigins);
             callback(new Error('Not allowed by CORS'));
         }
     },
