@@ -2,10 +2,9 @@ import { useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import CartContext from '../context/CartContext';
 import AuthContext from '../context/AuthContext';
-import axios from 'axios';
+import { api } from '../api';
 import { toast } from 'react-toastify';
 import { FaTrash, FaPlus, FaMinus, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
-import { API_URL } from '../config';
 import { motion } from 'framer-motion';
 
 const Cart = () => {
@@ -21,13 +20,6 @@ const Cart = () => {
         }
 
         try {
-            const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            };
-
             const orderData = {
                 outletId: cart[0].outletId,
                 items: cart.map(item => ({
@@ -39,7 +31,7 @@ const Cart = () => {
                 totalAmount
             };
 
-            await axios.post(`${API_URL}/orders`, orderData, config);
+            await api.post('/orders', orderData);
 
             clearCart();
             toast.success('Order placed successfully!');
@@ -142,7 +134,6 @@ const Cart = () => {
                             </motion.div>
                         ))}
                     </div>
-
                     {/* Order Summary */}
                     <div className="lg:col-span-1">
                         <motion.div

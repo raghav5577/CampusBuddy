@@ -2,8 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import FlowingMenu from '../components/FlowingMenu';
-import axios from 'axios';
-import { API_URL } from '../config';
+import { api } from '../api';
 import { FaArrowRight } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
@@ -18,7 +17,7 @@ const Login = () => {
     useEffect(() => {
         const fetchOutlets = async () => {
             try {
-                const { data } = await axios.get(`${API_URL}/outlets`);
+                const { data } = await api.get('/outlets');
                 setOutlets(data);
             } catch (error) {
                 console.error('Error loading outlets:', error);

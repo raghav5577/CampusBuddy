@@ -1,9 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import { api } from '../api';
 import AuthContext from '../context/AuthContext';
 import socket from '../socket';
 import { toast } from 'react-toastify';
-import { API_URL } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaFire, FaBell, FaCheckCircle, FaStore, FaPrint, FaToggleOn, FaToggleOff, FaUtensils, FaClipboardList, FaSearch, FaTimes } from 'react-icons/fa';
 
@@ -25,7 +24,7 @@ const AdminDashboard = () => {
         const fetchOutlets = async () => {
             if (user && !user.outletId) {
                 try {
-                    const { data } = await axios.get(`${API_URL}/outlets?all=true`);
+                    const { data } = await api.get('/outlets?all=true');
                     setOutlets(data);
                     if (data.length > 0) setSelectedOutletId(data[0]._id);
                 } catch (error) {
@@ -33,7 +32,7 @@ const AdminDashboard = () => {
                 }
             } else if (user && user.outletId) {
                 try {
-                    const { data } = await axios.get(`${API_URL}/outlets/${user.outletId}`);
+                    const { data } = await api.get(`/outlets/${user.outletId}`);
                     setOutlets([data]);
                     setSelectedOutletId(user.outletId);
                 } catch (error) {
@@ -54,13 +53,10 @@ const AdminDashboard = () => {
         const fetchOrdersAndOutlet = async () => {
             setLoading(true);
             try {
-                const token = JSON.parse(localStorage.getItem('userInfo')).token;
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-
-                const ordersRes = await axios.get(`${API_URL}/orders/outlet/${selectedOutletId}`, config);
+                const ordersRes = await api.get(`/orders/outlet/${selectedOutletId}`);
                 setOrders(ordersRes.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
 
-                const outletRes = await axios.get(`${API_URL}/outlets/${selectedOutletId}`);
+                const outletRes = await api.get(`/outlets/${selectedOutletId}`);
                 setCurrentOutlet(outletRes.data);
             } catch (error) {
                 console.error(error);
@@ -91,9 +87,7 @@ const AdminDashboard = () => {
         const fetchMenu = async () => {
             setMenuLoading(true);
             try {
-                const token = JSON.parse(localStorage.getItem('userInfo')).token;
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-                const { data } = await axios.get(`${API_URL}/outlets/${selectedOutletId}/menu`, config);
+                const { data } = await api.get(`/outlets/${selectedOutletId}/menu`);
                 setMenuItems(data);
             } catch (error) {
                 console.error(error);
@@ -108,9 +102,7 @@ const AdminDashboard = () => {
 
     const updateStatus = async (orderId, status) => {
         try {
-            const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.patch(`${API_URL}/orders/${orderId}/status`, { status }, config);
+            const { data } = await api.patch(`/orders/${orderId}/status`, { status });
             setOrders(prev => prev.map(o => o._id === orderId ? data : o));
             toast.success(`Order updated to ${status}`);
         } catch (error) {
@@ -121,9 +113,7 @@ const AdminDashboard = () => {
     const toggleOutletStatus = async () => {
         if (!currentOutlet) return;
         try {
-            const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.patch(`${API_URL}/outlets/${selectedOutletId}/toggle-status`, {}, config);
+            const { data } = await api.patch(`/outlets/${selectedOutletId}/toggle-status`, {});
             setCurrentOutlet(data);
             setOutlets(prev => prev.map(o => o._id === data._id ? { ...o, isOpen: data.isOpen } : o));
             if (data.isOpen) toast.success("Store is now OPEN");
@@ -137,12 +127,9 @@ const AdminDashboard = () => {
     const toggleItemAvailability = async (item) => {
         setTogglingItemId(item._id);
         try {
-            const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            const { data } = await axios.patch(
-                `${API_URL}/outlets/${selectedOutletId}/menu/${item._id}/toggle-availability`,
-                {},
-                config
+            const { data } = await api.patch(
+                `/outlets/${selectedOutletId}/menu/${item._id}/toggle-availability`,
+                {}
             );
             setMenuItems(prev => prev.map(i => i._id === data._id ? data : i));
             toast.success(`"${data.name}" marked as ${data.isAvailable ? 'Available' : 'Unavailable'}`);

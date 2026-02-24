@@ -4,8 +4,6 @@ import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { FaUser, FaEnvelope, FaLock, FaPhone } from 'react-icons/fa';
 import PageTransition from '../components/PageTransition';
-import axios from 'axios';
-import { API_URL } from '../config';
 import { toast } from 'react-toastify';
 
 const Register = () => {

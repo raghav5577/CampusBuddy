@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: campusbuddy-api
+    runtime: node
+    region: singapore
+    plan: free
+    branch: main
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false  # Set this in Render dashboard
+      - key: JWT_SECRET
+        sync: false  # Set this in Render dashboard
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        sync: false  # Set to your Vercel URL in Render dashboard
+    autoDeploy: true

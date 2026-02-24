@@ -31,9 +31,12 @@ const axiosRetry = async (fn, retries = 3, delay = 2000) => {
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+            const { token } = JSON.parse(userInfo);
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
         }
         return config;
     },

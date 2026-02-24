@@ -52,19 +52,8 @@ function AnimatedRoutes() {
 function App() {
   useEffect(() => {
     // Wake up backend on app load (Render free tier sleeps after inactivity)
-    const initBackend = async () => {
-      const toastId = toast.info('⏳ Connecting to server...', { autoClose: false });
-      const success = await wakeUpBackend();
-      toast.dismiss(toastId);
-      
-      if (success) {
-        toast.success('✅ Connected to server!', { autoClose: 2000 });
-      } else {
-        toast.warning('⚠️ Server is waking up, this may take a minute...', { autoClose: 5000 });
-      }
-    };
-    
-    initBackend();
+    // Silent wake-up without notifications
+    wakeUpBackend();
   }, []);
 
   return (
