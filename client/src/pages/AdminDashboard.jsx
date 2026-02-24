@@ -17,6 +17,8 @@ const AdminDashboard = () => {
     const [menuLoading, setMenuLoading] = useState(false);
     const [togglingItemId, setTogglingItemId] = useState(null);
     const [menuSearch, setMenuSearch] = useState('');
+    const [showCompletedView, setShowCompletedView] = useState(false);
+    const [viewingStatus, setViewingStatus] = useState(null); // 'picked-up' or 'cancelled'
     const { user } = useContext(AuthContext);
 
     // Fetch Outlets
@@ -314,18 +316,124 @@ const AdminDashboard = () => {
                                 {/* Stats */}
                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                                     {[
-                                        { label: 'Pending', value: orders.filter(o => o.status === 'pending').length, color: '#f5a623' },
-                                        { label: 'Preparing', value: orders.filter(o => o.status === 'preparing').length, color: '#7928ca' },
-                                        { label: 'Ready', value: orders.filter(o => o.status === 'ready').length, color: '#50e3c2' },
-                                        { label: 'Completed', value: orders.filter(o => o.status === 'picked-up').length, color: '#666' },
-                                        { label: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, color: '#ef4444' },
+                                        { label: 'Pending', value: orders.filter(o => o.status === 'pending').length, color: '#f5a623', status: 'pending' },
+                                        { label: 'Preparing', value: orders.filter(o => o.status === 'preparing').length, color: '#7928ca', status: 'preparing' },
+                                        { label: 'Ready', value: orders.filter(o => o.status === 'ready').length, color: '#50e3c2', status: 'ready' },
+                                        { label: 'Completed', value: orders.filter(o => o.status === 'picked-up').length, color: '#666', status: 'picked-up', clickable: true },
+                                        { label: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, color: '#ef4444', status: 'cancelled', clickable: true },
                                     ].map((stat, i) => (
-                                        <div key={i} className="p-4 rounded-xl border border-[#222] bg-[#0a0a0a] text-center">
+                                        <div 
+                                            key={i} 
+                                            onClick={() => {
+                                                if (stat.clickable && stat.value > 0) {
+                                                    setViewingStatus(stat.status);
+                                                    setShowCompletedView(true);
+                                                }
+                                            }}
+                                            className={`p-4 rounded-xl border border-[#222] bg-[#0a0a0a] text-center ${
+                                                stat.clickable && stat.value > 0 ? 'cursor-pointer hover:border-[#444] hover:bg-[#111] transition-all' : ''
+                                            }`}
+                                        >
                                             <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
                                             <p className="text-sm" style={{ color: stat.color }}>{stat.label}</p>
                                         </div>
                                     ))}
                                 </div>
+
+                                {/* Completed/Cancelled Orders View */}
+                                {showCompletedView && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 20 }} 
+                                        animate={{ opacity: 1, y: 0 }} 
+                                        className="mb-8 p-6 rounded-xl border border-[#333] bg-[#0a0a0a]"
+                                    >
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-white capitalize">
+                                                    {viewingStatus === 'picked-up' ? 'Completed' : 'Cancelled'} Orders
+                                                </h3>
+                                                <p className="text-[#666] text-sm mt-1">
+                                                    {orders.filter(o => o.status === viewingStatus).length} orders
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => setShowCompletedView(false)}
+                                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#111] border border-[#333] text-white hover:bg-[#1a1a1a] transition-all"
+                                            >
+                                                <FaTimes />
+                                                Close
+                                            </button>
+                                        </div>
+
+                                        {orders.filter(o => o.status === viewingStatus).length === 0 ? (
+                                            <div className="text-center py-10 border border-[#222] rounded-xl bg-[#050505]">
+                                                <p className="text-[#666]">No {viewingStatus === 'picked-up' ? 'completed' : 'cancelled'} orders</p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {orders.filter(o => o.status === viewingStatus).map((order, index) => (
+                                                    <motion.div
+                                                        key={order._id}
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                        className={`p-5 rounded-xl border ${
+                                                            viewingStatus === 'picked-up' 
+                                                                ? 'border-[#222] bg-[#0d0d0d]' 
+                                                                : 'border-red-500/20 bg-red-500/5'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <div>
+                                                                <span className="text-2xl font-bold text-white">#{order.kotNumber}</span>
+                                                                <p className="text-[#666] text-sm mt-1">
+                                                                    {new Date(order.createdAt).toLocaleString([], {
+                                                                        month: 'short',
+                                                                        day: 'numeric',
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit'
+                                                                    })}
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex flex-col items-end gap-2">
+                                                                <span className={`px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-full border ${
+                                                                    viewingStatus === 'picked-up'
+                                                                        ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                                                                        : 'bg-red-500/10 text-red-400 border-red-500/30'
+                                                                }`}>
+                                                                    {viewingStatus === 'picked-up' ? 'Completed' : 'Cancelled'}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => handlePrint(order)}
+                                                                    className="text-[#666] hover:text-white transition-colors"
+                                                                    title="Print KOT"
+                                                                >
+                                                                    <FaPrint />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="p-3 rounded-lg bg-[#111] border border-[#222] mb-3">
+                                                            {order.items.map((item, i) => (
+                                                                <div key={i} className="flex justify-between py-1 text-sm">
+                                                                    <span className="text-[#888]">
+                                                                        <span className="text-white font-bold">{item.quantity}×</span> {item.name}
+                                                                    </span>
+                                                                    <span className="text-[#666]">₹{item.price * item.quantity}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-3 border-t border-[#222]">
+                                                            <span className="text-[#666] text-sm">Total</span>
+                                                            <span className="text-white font-bold">₹{order.totalAmount}</span>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
 
                                 {/* Order Cards */}
                                 {orders.filter(o => o.status !== 'picked-up').length === 0 ? (
