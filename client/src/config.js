@@ -1,16 +1,23 @@
 // Determine if we're in production (deployed) or development (local)
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-// Use environment variables if set, otherwise use smart defaults
+// Use environment variables with local development defaults
 const API_URL = import.meta.env.VITE_API_URL || 
-    (isDevelopment ? 'http://localhost:5000/api' : 'https://campusbuddy-api.onrender.com/api');
+    (isDevelopment ? 'http://localhost:5000/api' : '');
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
-    (isDevelopment ? 'http://localhost:5000' : 'https://campusbuddy-api.onrender.com');
+    (isDevelopment ? 'http://localhost:5000' : '');
 
-// Log configuration in development
-if (isDevelopment) {
-    console.log('🔧 Config:', { API_URL, SOCKET_URL });
+// Validate configuration
+if (!API_URL || !SOCKET_URL) {
+    console.error('❌ Missing environment variables: VITE_API_URL or VITE_SOCKET_URL');
 }
+
+// Log configuration
+console.log('🔧 Config:', { 
+    environment: isDevelopment ? 'development' : 'production',
+    API_URL, 
+    SOCKET_URL 
+});
 
 export { API_URL, SOCKET_URL };
