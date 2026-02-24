@@ -46,6 +46,9 @@ const createOrder = async (req, res) => {
         });
 
         const createdOrder = await order.save();
+        
+        // Populate outlet info for response and Socket.IO
+        await createdOrder.populate('outletId', 'name image');
 
         // Socket.io: Notify restaurant
         const io = req.app.get('io');
@@ -63,7 +66,9 @@ const createOrder = async (req, res) => {
 // @access  Private
 const getMyOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        const orders = await Order.find({ userId: req.user._id })
+            .populate('outletId', 'name image')
+            .sort({ createdAt: -1 });
         res.json(orders);
     } catch (error) {
         console.error(error);
@@ -99,6 +104,9 @@ const updateOrderStatus = async (req, res) => {
 
         order.status = status;
         const updatedOrder = await order.save();
+        
+        // Populate outlet info for Socket.IO emission
+        await updatedOrder.populate('outletId', 'name image');
 
         console.log('🔔 [Server] Order status updated:', updatedOrder._id, '→', status);
         console.log('🔔 [Server] User ID:', updatedOrder.userId);

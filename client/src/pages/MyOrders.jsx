@@ -149,6 +149,9 @@ const MyOrders = () => {
                                                 <span className="font-bold text-white">#{order.kotNumber}</span>
                                             </div>
                                             <div>
+                                                <p className="text-[#0070f3] font-semibold text-sm mb-1">
+                                                    {order.outletId?.name || 'Campus Outlet'}
+                                                </p>
                                                 <p className="text-white font-medium">Order #{order.kotNumber}</p>
                                                 <p className="text-[#555] text-xs flex items-center gap-1">
                                                     <FaClock className="text-[10px]" />
