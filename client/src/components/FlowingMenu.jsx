@@ -91,31 +91,36 @@ function MenuItem({ link, text, image, speed, textColor, marqueeBgColor, marquee
         };
     }, [text, image, repetitions, speed]);
 
-    const handleMouseEnter = ev => {
+    const animateIn = (x, y) => {
         if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
         const rect = itemRef.current.getBoundingClientRect();
-        const x = ev.clientX - rect.left;
-        const y = ev.clientY - rect.top;
-        const edge = findClosestEdge(x, y, rect.width, rect.height);
-
-        // Animate Marquee IN
+        const edge = findClosestEdge(x - rect.left, y - rect.top, rect.width, rect.height);
         const tl = gsap.timeline({ defaults: animationDefaults });
         tl.set(marqueeRef.current, { y: edge === 'top' ? '-101%' : '101%' }, 0)
             .set(marqueeInnerRef.current, { y: edge === 'top' ? '101%' : '-101%' }, 0)
             .to([marqueeRef.current, marqueeInnerRef.current], { y: '0%' }, 0);
     };
 
-    const handleMouseLeave = ev => {
+    const animateOut = (x, y) => {
         if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
         const rect = itemRef.current.getBoundingClientRect();
-        const x = ev.clientX - rect.left;
-        const y = ev.clientY - rect.top;
-        const edge = findClosestEdge(x, y, rect.width, rect.height);
-
-        // Animate Marquee OUT
+        const edge = findClosestEdge(x - rect.left, y - rect.top, rect.width, rect.height);
         const tl = gsap.timeline({ defaults: animationDefaults });
         tl.to(marqueeRef.current, { y: edge === 'top' ? '-101%' : '101%' }, 0)
             .to(marqueeInnerRef.current, { y: edge === 'top' ? '101%' : '-101%' }, 0);
+    };
+
+    const handleMouseEnter = ev => animateIn(ev.clientX, ev.clientY);
+    const handleMouseLeave = ev => animateOut(ev.clientX, ev.clientY);
+
+    const handleTouchStart = ev => {
+        const touch = ev.touches[0];
+        animateIn(touch.clientX, touch.clientY);
+    };
+
+    const handleTouchEnd = ev => {
+        const touch = ev.changedTouches[0];
+        animateOut(touch.clientX, touch.clientY);
     };
 
     return (
@@ -125,6 +130,8 @@ function MenuItem({ link, text, image, speed, textColor, marqueeBgColor, marquee
                 to={link}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
                 style={{ color: textColor }}
             >
                 {text}
