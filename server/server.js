@@ -15,14 +15,34 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
+// Allow localhost, configured CLIENT_URL, and Vercel deployments.
+const allowedExactOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    process.env.CLIENT_URL
+].filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+    if (!origin) return true;
+    if (allowedExactOrigins.includes(origin)) return true;
+
+    // Support Vercel production/preview deployments without hardcoding each URL.
+    try {
+        const { hostname, protocol } = new URL(origin);
+        return protocol === 'https:' && hostname.endsWith('.vercel.app');
+    } catch {
+        return false;
+    }
+};
+
 // Socket.io setup with enhanced configuration for production
 const io = new Server(server, {
     cors: {
-        origin: [
-            'http://localhost:5173',
-            'https://campusbuddy-gray.vercel.app',
-            process.env.CLIENT_URL
-        ].filter(Boolean),
+        origin: (origin, callback) => {
+            if (isAllowedOrigin(origin)) return callback(null, true);
+            return callback(new Error('Not allowed by Socket.IO CORS'));
+        },
         methods: ['GET', 'POST', 'PATCH', 'DELETE'],
         credentials: true
     },
@@ -60,27 +80,21 @@ io.on('connection', (socket) => {
     });
 });
 
-// CORS - Allow multiple origins
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5173',
-    process.env.CLIENT_URL
-].filter(Boolean);
-
-console.log('🔒 CORS allowed origins:', allowedOrigins);
+console.log('🔒 CORS allowed origins (exact):', allowedExactOrigins);
+console.log('🔒 CORS allowed wildcard:', 'https://*.vercel.app');
 
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
+
+        if (isAllowedOrigin(origin)) {
             console.log('✅ CORS allowed for:', origin);
             callback(null, true);
         } else {
             console.log('❌ CORS blocked origin:', origin);
-            console.log('   Allowed origins:', allowedOrigins);
+            console.log('   Allowed exact origins:', allowedExactOrigins);
+            console.log('   Allowed wildcard:', 'https://*.vercel.app');
             callback(new Error('Not allowed by CORS'));
         }
     },

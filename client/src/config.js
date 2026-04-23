@@ -1,12 +1,14 @@
 // Determine if we're in production (deployed) or development (local)
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+const productionBackendBase = 'https://campusbuddy-api.onrender.com';
+
 // Use environment variables with local development defaults
 const API_URL = import.meta.env.VITE_API_URL || 
-    (isDevelopment ? 'http://localhost:5000/api' : '');
+    (isDevelopment ? 'http://localhost:5000/api' : `${productionBackendBase}/api`);
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
-    (isDevelopment ? 'http://localhost:5000' : '');
+    (isDevelopment ? 'http://localhost:5000' : productionBackendBase);
 
 // Validate configuration
 if (!API_URL || !SOCKET_URL) {
