@@ -1,14 +1,14 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { FaUser, FaEnvelope, FaLock, FaPhone } from 'react-icons/fa';
 import PageTransition from '../components/PageTransition';
-import { toast } from 'react-toastify';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
-    const { register } = useContext(AuthContext);
+    const { register, googleAuth } = useContext(AuthContext);
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,6 +23,13 @@ const Register = () => {
             navigate('/');
         }
     };
+
+    const handleGoogleAuth = useCallback(async (credential) => {
+        const success = await googleAuth(credential);
+        if (success) {
+            navigate('/');
+        }
+    }, [googleAuth, navigate]);
 
     return (
         <PageTransition>
@@ -126,6 +133,8 @@ const Register = () => {
                                 <span className="px-2 bg-[#0a0a0a] text-gray-500">OR</span>
                             </div>
                         </div>
+
+                        <GoogleAuthButton onSuccess={handleGoogleAuth} mode="signup" />
 
                         <p className="text-center text-gray-400">
                             Already have an account?{' '}

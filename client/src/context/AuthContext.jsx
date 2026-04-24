@@ -46,6 +46,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const googleAuth = async (credential) => {
+        try {
+            const { data } = await api.post('/auth/google', { credential });
+            setUser(data);
+            localStorage.setItem('userInfo', JSON.stringify(data));
+            toast.success('Google sign-in successful!');
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Google sign-in failed');
+            return false;
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('userInfo');
         setUser(null);
@@ -53,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, googleAuth, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,14 +1,15 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import FlowingMenu from '../components/FlowingMenu';
 import { api } from '../api';
 import { FaArrowRight } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
-    const { login } = useContext(AuthContext);
+    const { login, googleAuth } = useContext(AuthContext);
     const navigate = useNavigate();
     const [outlets, setOutlets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -42,6 +43,11 @@ const Login = () => {
         setIsSubmitting(false);
         if (success) navigate('/');
     };
+
+    const handleGoogleAuth = useCallback(async (credential) => {
+        const success = await googleAuth(credential);
+        if (success) navigate('/');
+    }, [googleAuth, navigate]);
 
     return (
         <div className="min-h-screen bg-black">
@@ -124,6 +130,8 @@ const Login = () => {
                                 <span className="px-4 bg-[#0a0a0a] text-[#666]">OR</span>
                             </div>
                         </div>
+
+                        <GoogleAuthButton onSuccess={handleGoogleAuth} mode="signin" />
 
                         <p className="text-center text-[#666] text-sm">
                             Don't have an account?{' '}
