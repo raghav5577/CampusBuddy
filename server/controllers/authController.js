@@ -3,9 +3,12 @@ const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 
-const googleClient = process.env.GOOGLE_CLIENT_ID
-    ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
-    : null;
+const getGoogleClientId = () => process.env.GOOGLE_CLIENT_ID || '';
+
+const getGoogleClient = () => {
+    const clientId = getGoogleClientId();
+    return clientId ? new OAuth2Client(clientId) : null;
+};
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -98,8 +101,13 @@ const loginUser = async (req, res) => {
 // @access  Public
 const googleAuth = async (req, res) => {
     try {
+        const googleClientId = getGoogleClientId();
+        const googleClient = getGoogleClient();
+
         if (!googleClient) {
-            return res.status(500).json({ message: 'Google OAuth is not configured on server' });
+            return res.status(500).json({
+                message: 'Google OAuth is not configured on server. Missing GOOGLE_CLIENT_ID.'
+            });
         }
 
         const { credential } = req.body;
@@ -109,7 +117,7 @@ const googleAuth = async (req, res) => {
 
         const ticket = await googleClient.verifyIdToken({
             idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID
+            audience: googleClientId
         });
 
         const payload = ticket.getPayload();

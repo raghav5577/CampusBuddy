@@ -18,6 +18,8 @@ services:
         sync: false  # Set this in Render dashboard
       - key: JWT_EXPIRES_IN
         value: 7d
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Set to your Google OAuth web client ID in Render dashboard
       - key: CLIENT_URL
         sync: false  # Set to your Vercel URL in Render dashboard
     autoDeploy: true
