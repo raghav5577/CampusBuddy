@@ -118,6 +118,68 @@ const toggleMenuItemAvailability = async (req, res) => {
     }
 };
 
+// @desc    Update a menu item
+// @route   PUT /api/outlets/:id/menu/:itemId
+// @access  Private/Admin
+const updateMenuItem = async (req, res) => {
+    try {
+        const item = await MenuItem.findOneAndUpdate(
+            { _id: req.params.itemId, outletId: req.params.id },
+            req.body,
+            { new: true, runValidators: true }
+        );
+        if (!item) {
+            return res.status(404).json({ message: 'Menu item not found' });
+        }
+        res.json(item);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Delete a menu item
+// @route   DELETE /api/outlets/:id/menu/:itemId
+// @access  Private/Admin
+const deleteMenuItem = async (req, res) => {
+    try {
+        const item = await MenuItem.findOneAndDelete({ _id: req.params.itemId, outletId: req.params.id });
+        if (!item) {
+            return res.status(404).json({ message: 'Menu item not found' });
+        }
+        res.json({ message: 'Menu item removed' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Bulk update menu items
+// @route   PUT /api/outlets/:id/menu/bulk
+// @access  Private/Admin
+const bulkUpdateMenu = async (req, res) => {
+    try {
+        const outletId = req.params.id;
+        const items = req.body; // Array of menu items
+
+        // Remove all existing items for this outlet
+        await MenuItem.deleteMany({ outletId });
+
+        // Insert new items
+        const newItems = items.map(item => ({
+            ...item,
+            outletId,
+            _id: item._id && item._id.length === 24 ? item._id : undefined // keep ID if valid, otherwise new ID generated
+        }));
+
+        const inserted = await MenuItem.insertMany(newItems);
+        res.json(inserted);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     getOutlets,
     getOutletById,
@@ -125,5 +187,8 @@ module.exports = {
     addMenuItem,
     getMenuItems,
     toggleMenuItemAvailability,
-    toggleOutletStatus
+    toggleOutletStatus,
+    updateMenuItem,
+    deleteMenuItem,
+    bulkUpdateMenu
 };

@@ -20,6 +20,7 @@ import Stores from './pages/Stores';
 import Contact from './pages/Contact';
 import UserProfile from './pages/UserProfile';
 import Debug from './pages/Debug';
+import CmsPortal from './pages/CmsPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 import PageTransition from './components/PageTransition';
 import { wakeUpBackend } from './api';
@@ -44,6 +45,7 @@ function AnimatedRoutes() {
 
         <Route path="/orders" element={<PageTransition><ProtectedRoute><MyOrders /></ProtectedRoute></PageTransition>} />
         <Route path="/admin" element={<PageTransition><ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute></PageTransition>} />
+        <Route path="/admin/cms" element={<PageTransition><ProtectedRoute adminOnly><CmsPortal /></ProtectedRoute></PageTransition>} />
       </Routes>
     </AnimatePresence>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import AuthContext from '../context/AuthContext';
 import socket from '../socket';
@@ -12,11 +13,7 @@ const AdminDashboard = () => {
     const [outlets, setOutlets] = useState([]);
     const [selectedOutletId, setSelectedOutletId] = useState(null);
     const [currentOutlet, setCurrentOutlet] = useState(null);
-    const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'menu'
-    const [menuItems, setMenuItems] = useState([]);
-    const [menuLoading, setMenuLoading] = useState(false);
-    const [togglingItemId, setTogglingItemId] = useState(null);
-    const [menuSearch, setMenuSearch] = useState('');
+
     const [showCompletedView, setShowCompletedView] = useState(false);
     const [viewingStatus, setViewingStatus] = useState(null); // 'picked-up' or 'cancelled'
     const { user } = useContext(AuthContext);
@@ -82,25 +79,7 @@ const AdminDashboard = () => {
         return () => { socket.off('new_order', handleNewOrder); };
     }, [selectedOutletId]);
 
-    // Fetch Menu Items when Menu tab is opened
-    useEffect(() => {
-        if (activeTab !== 'menu' || !selectedOutletId) return;
 
-        const fetchMenu = async () => {
-            setMenuLoading(true);
-            try {
-                const { data } = await api.get(`/outlets/${selectedOutletId}/menu`);
-                setMenuItems(data);
-            } catch (error) {
-                console.error(error);
-                toast.error('Failed to load menu items');
-            } finally {
-                setMenuLoading(false);
-            }
-        };
-
-        fetchMenu();
-    }, [activeTab, selectedOutletId]);
 
     const updateStatus = async (orderId, status) => {
         try {
@@ -126,22 +105,7 @@ const AdminDashboard = () => {
         }
     };
 
-    const toggleItemAvailability = async (item) => {
-        setTogglingItemId(item._id);
-        try {
-            const { data } = await api.patch(
-                `/outlets/${selectedOutletId}/menu/${item._id}/toggle-availability`,
-                {}
-            );
-            setMenuItems(prev => prev.map(i => i._id === data._id ? data : i));
-            toast.success(`"${data.name}" marked as ${data.isAvailable ? 'Available' : 'Unavailable'}`);
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to update item availability');
-        } finally {
-            setTogglingItemId(null);
-        }
-    };
+
 
     const handlePrint = (order) => {
         const printWindow = window.open('', '_blank');
@@ -203,22 +167,7 @@ const AdminDashboard = () => {
         return buttons[order.status];
     };
 
-    // Group menu items by category (with search applied)
-    const searchedMenuItems = menuSearch.trim()
-        ? menuItems.filter(item =>
-            item.name.toLowerCase().includes(menuSearch.toLowerCase()) ||
-            item.description?.toLowerCase().includes(menuSearch.toLowerCase())
-        )
-        : menuItems;
 
-    const menuByCategory = searchedMenuItems.reduce((acc, item) => {
-        const cat = item.category || 'Others';
-        if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(item);
-        return acc;
-    }, {});
-
-    const unavailableCount = menuItems.filter(i => !i.isAvailable).length;
     const showOutletSelector = user && !user.outletId;
     const currentOutletName = currentOutlet ? currentOutlet.name : 'Loading...';
     const isOutletOpen = currentOutlet ? currentOutlet.isOpen : false;
@@ -249,7 +198,15 @@ const AdminDashboard = () => {
                             <p className="text-[#666]">Managing: <span className="text-white font-semibold">{currentOutletName}</span></p>
                         </div>
 
-                        {showOutletSelector && (
+                        <div className="flex items-center gap-4">
+                            <Link 
+                                to="/admin/cms" 
+                                className="flex items-center gap-2 px-4 py-2 bg-[#0070f3] text-white rounded-lg hover:bg-[#0060df] transition-colors font-medium text-sm"
+                            >
+                                <FaUtensils /> Manage Menu
+                            </Link>
+
+                            {showOutletSelector && (
                             <div className="flex items-center gap-2 bg-[#111] border border-[#333] rounded-lg px-3 py-2">
                                 <FaStore className="text-[#666]" />
                                 <select
@@ -264,47 +221,19 @@ const AdminDashboard = () => {
                                     ))}
                                 </select>
                             </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </motion.div>
 
-                {/* Tabs */}
-                <div className="flex gap-1 mb-6 bg-[#111] border border-[#222] rounded-xl p-1 w-fit">
-                    <button
-                        onClick={() => setActiveTab('orders')}
-                        className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'orders'
-                            ? 'bg-white text-black'
-                            : 'text-[#666] hover:text-white'
-                            }`}
-                    >
-                        <FaClipboardList />
-                        Orders
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('menu')}
-                        className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'menu'
-                            ? 'bg-white text-black'
-                            : 'text-[#666] hover:text-white'
-                            }`}
-                    >
-                        <FaUtensils />
-                        Menu
-                        {unavailableCount > 0 && (
-                            <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-500/20 text-red-400 rounded-full border border-red-500/30">
-                                {unavailableCount} off
-                            </span>
-                        )}
-                    </button>
-                </div>
+
 
                 {loading ? (
                     <div className="flex justify-center py-20">
                         <div className="w-10 h-10 border-2 border-[#333] border-t-white rounded-full animate-spin" />
                     </div>
                 ) : (
-                    <AnimatePresence mode="wait">
-                        {activeTab === 'orders' ? (
-                            <motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                 {/* Closed Warning */}
                                 {!isOutletOpen && (
                                     <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 flex items-center gap-3">
@@ -322,17 +251,16 @@ const AdminDashboard = () => {
                                         { label: 'Completed', value: orders.filter(o => o.status === 'picked-up').length, color: '#666', status: 'picked-up', clickable: true },
                                         { label: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, color: '#ef4444', status: 'cancelled', clickable: true },
                                     ].map((stat, i) => (
-                                        <div 
-                                            key={i} 
+                                        <div
+                                            key={i}
                                             onClick={() => {
                                                 if (stat.clickable && stat.value > 0) {
                                                     setViewingStatus(stat.status);
                                                     setShowCompletedView(true);
                                                 }
                                             }}
-                                            className={`p-4 rounded-xl border border-[#222] bg-[#0a0a0a] text-center ${
-                                                stat.clickable && stat.value > 0 ? 'cursor-pointer hover:border-[#444] hover:bg-[#111] transition-all' : ''
-                                            }`}
+                                            className={`p-4 rounded-xl border border-[#222] bg-[#0a0a0a] text-center ${stat.clickable && stat.value > 0 ? 'cursor-pointer hover:border-[#444] hover:bg-[#111] transition-all' : ''
+                                                }`}
                                         >
                                             <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
                                             <p className="text-sm" style={{ color: stat.color }}>{stat.label}</p>
@@ -342,9 +270,9 @@ const AdminDashboard = () => {
 
                                 {/* Completed/Cancelled Orders View */}
                                 {showCompletedView && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 20 }} 
-                                        animate={{ opacity: 1, y: 0 }} 
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
                                         className="mb-8 p-6 rounded-xl border border-[#333] bg-[#0a0a0a]"
                                     >
                                         <div className="flex items-center justify-between mb-6">
@@ -377,11 +305,10 @@ const AdminDashboard = () => {
                                                         initial={{ opacity: 0, scale: 0.95 }}
                                                         animate={{ opacity: 1, scale: 1 }}
                                                         transition={{ delay: index * 0.05 }}
-                                                        className={`p-5 rounded-xl border ${
-                                                            viewingStatus === 'picked-up' 
-                                                                ? 'border-[#222] bg-[#0d0d0d]' 
+                                                        className={`p-5 rounded-xl border ${viewingStatus === 'picked-up'
+                                                                ? 'border-[#222] bg-[#0d0d0d]'
                                                                 : 'border-red-500/20 bg-red-500/5'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <div className="flex items-center justify-between mb-4">
                                                             <div>
@@ -396,11 +323,10 @@ const AdminDashboard = () => {
                                                                 </p>
                                                             </div>
                                                             <div className="flex flex-col items-end gap-2">
-                                                                <span className={`px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-full border ${
-                                                                    viewingStatus === 'picked-up'
+                                                                <span className={`px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-full border ${viewingStatus === 'picked-up'
                                                                         ? 'bg-green-500/10 text-green-400 border-green-500/30'
                                                                         : 'bg-red-500/10 text-red-400 border-red-500/30'
-                                                                }`}>
+                                                                    }`}>
                                                                     {viewingStatus === 'picked-up' ? 'Completed' : 'Cancelled'}
                                                                 </span>
                                                                 <button
@@ -512,122 +438,6 @@ const AdminDashboard = () => {
                                     </div>
                                 )}
                             </motion.div>
-                        ) : (
-                            /* ── MENU TAB ── */
-                            <motion.div key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <div className="mb-6">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                        <div>
-                                            <h2 className="text-xl font-bold text-white">Menu Availability</h2>
-                                            <p className="text-[#666] text-sm mt-1">
-                                                Toggle items on/off. Unavailable items will be greyed out for customers.
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            {unavailableCount > 0 && (
-                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                                                    <span className="text-red-400 text-sm font-medium">{unavailableCount} off</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Search bar */}
-                                    <div className="relative mt-4">
-                                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none" />
-                                        <input
-                                            type="text"
-                                            value={menuSearch}
-                                            onChange={(e) => setMenuSearch(e.target.value)}
-                                            placeholder="Search items by name..."
-                                            className="w-full pl-9 pr-9 py-2.5 rounded-xl text-sm bg-[#111] border border-[#333] text-white placeholder-[#555] focus:outline-none focus:border-[#555] transition-colors"
-                                        />
-                                        {menuSearch && (
-                                            <button
-                                                onClick={() => setMenuSearch('')}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-white transition-colors"
-                                            >
-                                                <FaTimes className="text-xs" />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {menuLoading ? (
-                                    <div className="flex justify-center py-20">
-                                        <div className="w-10 h-10 border-2 border-[#333] border-t-white rounded-full animate-spin" />
-                                    </div>
-                                ) : searchedMenuItems.length === 0 ? (
-                                    <div className="text-center py-20 border border-[#222] rounded-xl bg-[#0a0a0a]">
-                                        {menuSearch ? (
-                                            <>
-                                                <p className="text-[#666] mb-2">No items match &ldquo;{menuSearch}&rdquo;</p>
-                                                <button onClick={() => setMenuSearch('')} className="text-sm text-[#0070f3] hover:underline">Clear search</button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FaUtensils className="text-4xl text-[#333] mx-auto mb-4" />
-                                                <p className="text-[#666]">No menu items found</p>
-                                            </>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="space-y-8">
-                                        {Object.entries(menuByCategory).map(([category, items]) => (
-                                            <div key={category}>
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <h3 className="text-sm font-semibold text-[#888] uppercase tracking-widest">{category}</h3>
-                                                    <div className="flex-1 h-px bg-[#222]" />
-                                                    <span className="text-xs text-[#555]">{items.length} item{items.length > 1 ? 's' : ''}</span>
-                                                </div>
-                                                <div className="grid md:grid-cols-2 gap-3">
-                                                    {items.map((item) => (
-                                                        <motion.div
-                                                            key={item._id}
-                                                            layout
-                                                            className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${item.isAvailable
-                                                                ? 'border-[#222] bg-[#0a0a0a]'
-                                                                : 'border-[#1a1a1a] bg-[#080808] opacity-60'
-                                                                }`}
-                                                        >
-                                                            {/* Item info */}
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <p className={`font-medium truncate ${item.isAvailable ? 'text-white' : 'text-[#555] line-through'}`}>
-                                                                        {item.name}
-                                                                    </p>
-                                                                    {!item.isAvailable && (
-                                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 whitespace-nowrap">
-                                                                            Unavailable
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="text-[#666] text-sm mt-0.5">₹{item.price}</p>
-                                                            </div>
-
-                                                            {/* Toggle button */}
-                                                            <button
-                                                                onClick={() => toggleItemAvailability(item)}
-                                                                disabled={togglingItemId === item._id}
-                                                                title={item.isAvailable ? 'Mark as Unavailable' : 'Mark as Available'}
-                                                                className={`relative flex-shrink-0 w-12 h-6 rounded-full transition-all duration-300 ${item.isAvailable
-                                                                    ? 'bg-[#50e3c2]'
-                                                                    : 'bg-[#333]'
-                                                                    } ${togglingItemId === item._id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'}`}
-                                                            >
-                                                                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${item.isAvailable ? 'translate-x-6' : 'translate-x-0'}`} />
-                                                            </button>
-                                                        </motion.div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
                 )}
             </div>
         </div>
